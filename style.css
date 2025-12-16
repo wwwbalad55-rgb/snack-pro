@@ -3,19 +3,19 @@
 * {
     box-sizing: border-box;
     margin: 0; padding: 0;
-    user-select: none; /* يمنع تحديد النصوص */
+    user-select: none;
     -webkit-tap-highlight-color: transparent;
 }
 
 body {
-    background: linear-gradient(180deg, #1e3c72, #2a5298);
+    background: linear-gradient(180deg, #102040, #204080); /* لون أزرق غامق */
     font-family: 'Cairo', sans-serif;
     height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
     color: white;
-    overflow: hidden; /* يمنع السكرول */
+    overflow: hidden;
     touch-action: none;
 }
 
@@ -24,46 +24,52 @@ body {
     flex-direction: column;
     align-items: center;
     width: 100%;
-    max-width: 500px;
-    padding: 10px;
+    /* هذا التكبير للحاسبة فقط */
+    transform: scale(1.1); 
+}
+
+/* تعديل للموبايل حتى ما يصير كبير زيادة */
+@media (max-width: 600px) {
+    .main-wrapper { transform: scale(1); }
 }
 
 .game-title {
-    font-size: 24px;
+    font-size: 28px;
     margin-bottom: 10px;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    text-shadow: 0 3px 5px rgba(0,0,0,0.4);
 }
 
 .score-board {
     display: flex;
-    gap: 20px;
+    gap: 15px;
     margin-bottom: 15px;
-    width: 100%;
-    justify-content: center;
 }
 
 .score-box {
     background: rgba(255,255,255,0.1);
-    padding: 8px 20px;
-    border-radius: 10px;
+    padding: 10px 25px;
+    border-radius: 12px;
     text-align: center;
     font-size: 14px;
     border: 1px solid rgba(255,255,255,0.2);
+    min-width: 90px;
 }
 
 .score-box span {
-    font-size: 20px;
+    font-size: 22px;
     font-weight: bold;
     color: #f1c40f;
+    display: block;
+    margin-top: 5px;
 }
 
 .game-area {
     position: relative;
-    border: 4px solid #fff;
+    border: 3px solid #fff;
     border-radius: 8px;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+    box-shadow: 0 0 20px rgba(0,0,0,0.6);
     background: #000;
-    width: 320px; /* عرض ثابت مناسب للموبايل */
+    width: 320px;
     height: 320px;
 }
 
@@ -73,12 +79,11 @@ canvas {
     height: 100%;
 }
 
-/* شاشة الخسارة */
 .overlay {
     position: absolute;
     top: 0; left: 0;
     width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.85);
+    background: rgba(0, 0, 0, 0.9);
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -89,47 +94,49 @@ canvas {
 .hidden { display: none; }
 
 #actionBtn {
-    margin-top: 15px;
-    padding: 10px 20px;
+    margin-top: 20px;
+    padding: 12px 30px;
     font-size: 18px;
-    background: #27ae60;
+    background: #2ecc71;
     color: white;
     border: none;
     border-radius: 50px;
     cursor: pointer;
     font-family: inherit;
+    box-shadow: 0 4px 0 #27ae60;
 }
+#actionBtn:active { transform: translateY(4px); box-shadow: none; }
 
 /* --- الأزرار --- */
 .controls-area {
-    margin-top: 20px;
+    margin-top: 25px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
 }
 
 .row {
     display: flex;
-    gap: 20px;
+    gap: 15px;
 }
 
 .btn {
-    width: 60px;
-    height: 60px;
+    width: 65px;
+    height: 65px;
     border-radius: 50%;
-    border: 2px solid rgba(255,255,255,0.5);
+    border: 2px solid rgba(255,255,255,0.4);
     background: rgba(255,255,255,0.1);
     color: white;
-    font-size: 24px;
+    font-size: 26px;
     display: flex;
     justify-content: center;
     align-items: center;
     cursor: pointer;
-    touch-action: manipulation;
+    transition: 0.1s;
 }
 
 .btn:active {
-    background: rgba(255,255,255,0.4);
-    transform: scale(0.9);
+    background: rgba(255,255,255,0.3);
+    transform: scale(0.95);
 }
