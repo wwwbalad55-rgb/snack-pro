@@ -8,7 +8,7 @@
 }
 
 body {
-    background: linear-gradient(180deg, #102040, #204080); /* لون أزرق غامق */
+    background: linear-gradient(180deg, #102040, #204080);
     font-family: 'Cairo', sans-serif;
     height: 100vh;
     display: flex;
@@ -24,11 +24,9 @@ body {
     flex-direction: column;
     align-items: center;
     width: 100%;
-    /* هذا التكبير للحاسبة فقط */
-    transform: scale(1.1); 
+    transform: scale(1.1);
 }
 
-/* تعديل للموبايل حتى ما يصير كبير زيادة */
 @media (max-width: 600px) {
     .main-wrapper { transform: scale(1); }
 }
@@ -107,7 +105,6 @@ canvas {
 }
 #actionBtn:active { transform: translateY(4px); box-shadow: none; }
 
-/* --- الأزرار --- */
 .controls-area {
     margin-top: 25px;
     display: flex;
