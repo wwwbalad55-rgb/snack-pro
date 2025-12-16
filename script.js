@@ -15,7 +15,7 @@ let highScore = localStorage.getItem('snakeHighScore') || 0;
 let direction = ''; 
 let nextDirection = '';
 let isRunning = false;
-let isPaused = false; // متغير للتوقيف
+let isPaused = false; 
 let obstacles = [];
 let particles = [];
 let foodIcons = ["🍎", "🍉", "🍇", "🍓", "🍒", "🍑", "🍍", "🍕", "🍔"];
@@ -36,14 +36,13 @@ function showMapSelection() { switchScreen('mapScreen'); }
 function switchScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
     document.getElementById(id).classList.remove('hidden');
-    // إخفاء أي Overlay مفتوح عند الانتقال للقائمة
     document.getElementById('pauseOverlay').classList.add('hidden');
     document.getElementById('gameOverOverlay').classList.add('hidden');
     isRunning = false;
     isPaused = false;
 }
 
-// === المتجر والخيارات ===
+// === المتجر ===
 const skins = [
     { color: '#2ecc71', name: 'نيون أخضر' },
     { color: '#3498db', name: 'نيون أزرق' },
@@ -104,7 +103,7 @@ function initGame() {
     document.getElementById('score').innerText = score;
     document.getElementById('highScore').innerText = highScore;
     
-    // تأكد من إخفاء كل القوائم المنبثقة
+    // إخفاء القوائم
     document.getElementById('gameOverOverlay').classList.add('hidden');
     document.getElementById('pauseOverlay').classList.add('hidden');
     
@@ -114,23 +113,19 @@ function initGame() {
     isPaused = false;
 }
 
+// 🛠️ التعديل المهم هنا: إعادة تشغيل المحرك 🛠️
 function resetGame() {
-    // هذه الدالة الآن تقوم بعمل "ريست" كامل
     initGame();
+    // ضروري جداً نشغل اللوب مرة ثانية لأنها توقفت عند الخسارة
+    window.requestAnimationFrame(mainLoop);
 }
 
-// === التوقيف والاستئناف (Pause Logic) ===
 function togglePause() {
-    if (!isRunning && !isPaused) return; // لا تعمل اذا اللعبة منتهية
-    
+    if (!isRunning && !isPaused) return; 
     isPaused = !isPaused;
     const pauseMenu = document.getElementById('pauseOverlay');
-    
-    if (isPaused) {
-        pauseMenu.classList.remove('hidden');
-    } else {
-        pauseMenu.classList.add('hidden');
-    }
+    if (isPaused) pauseMenu.classList.remove('hidden');
+    else pauseMenu.classList.add('hidden');
 }
 
 function buildMap() {
@@ -154,7 +149,7 @@ function mainLoop(currentTime) {
     if (!isRunning) return; 
     window.requestAnimationFrame(mainLoop);
     
-    if (isPaused) return; // إذا متوقفة لا تكمل التحديث
+    if (isPaused) return; 
     
     const secondsSinceLastRender = (currentTime - lastRenderTime) / 1000;
     if (secondsSinceLastRender < 1 / gameSpeed) return;
@@ -276,7 +271,7 @@ function generateFood() {
 }
 
 function gameOver() {
-    isRunning = false; // إيقاف اللوب
+    isRunning = false;
     deadSound.play().catch(()=>{});
     if (score > highScore) {
         highScore = score;
@@ -287,7 +282,7 @@ function gameOver() {
 }
 
 function handleInput(dir) {
-    if (!isRunning || isPaused) return; // لا تتحرك إذا متوقفة
+    if (!isRunning || isPaused) return; 
     if (dir === 'UP' && direction !== 'DOWN') nextDirection = 'UP';
     if (dir === 'DOWN' && direction !== 'UP') nextDirection = 'DOWN';
     if (dir === 'LEFT' && direction !== 'RIGHT') nextDirection = 'LEFT';
