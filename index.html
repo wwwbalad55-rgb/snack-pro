@@ -3,36 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Snake Portal Mode 🌀</title>
+    <title>Snake Master Pro 🐍</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <div class="main-wrapper">
-        <h1 class="game-title">🐍 لعبة الثعبان</h1>
-
-        <div class="score-board">
-            <div class="score-box">النتيجة <br><span id="score">0</span></div>
-            <div class="score-box best">الأفضل <br><span id="highScore">0</span></div>
+        
+        <div id="mainMenu" class="screen">
+            <h1 class="game-title">🐍 Snake Master</h1>
+            <button class="menu-btn" onclick="showMapSelection()">▶️ ابدأ اللعب</button>
+            <button class="menu-btn shop-btn" onclick="showShop()">🛒 المتجر</button>
+            <div class="footer">Developed by You</div>
         </div>
 
-        <div class="game-area">
-            <canvas id="gameCanvas"></canvas>
-            
-            <div id="gameOverlay" class="overlay hidden">
-                <h2 id="overlayTitle">GAME OVER</h2>
-                <button id="actionBtn">العب مجدداً 🔄</button>
+        <div id="shopScreen" class="screen hidden">
+            <h2>🛒 متجر الجلود</h2>
+            <div class="skins-grid" id="skinsContainer">
+                </div>
+            <button class="menu-btn back-btn" onclick="showMainMenu()">🔙 رجوع</button>
+        </div>
+
+        <div id="mapScreen" class="screen hidden">
+            <h2>🗺️ اختر الخريطة</h2>
+            <div class="options-grid">
+                <button class="opt-btn selected" onclick="selectMap(1, this)">🌀 حرة</button>
+                <button class="opt-btn" onclick="selectMap(2, this)">🧱 الوسط</button>
+                <button class="opt-btn" onclick="selectMap(3, this)">☠️ الزوايا</button>
+                <button class="opt-btn" onclick="selectMap(4, this)">📦 صندوق</button>
+            </div>
+
+            <h2>🔥 الصعوبة</h2>
+            <div class="options-grid">
+                <button class="opt-btn selected" onclick="selectDiff('easy', this)">😌 سهل</button>
+                <button class="opt-btn" onclick="selectDiff('hard', this)">😈 صعب</button>
+            </div>
+
+            <button class="menu-btn start-btn" onclick="startGame()">🚀 انطلق</button>
+            <button class="menu-btn back-btn" onclick="showMainMenu()">🔙 الغاء</button>
+        </div>
+
+        <div id="gameScreen" class="screen hidden">
+            <div class="score-board">
+                <div class="score-box">النتيجة: <span id="score">0</span></div>
+                <div class="score-box">الأفضل: <span id="highScore">0</span></div>
+            </div>
+
+            <div class="game-area">
+                <canvas id="gameCanvas"></canvas>
+                <div id="gameOverlay" class="overlay hidden">
+                    <h2 id="overlayTitle">GAME OVER</h2>
+                    <button class="menu-btn" onclick="resetGame()">🔄 العب مجدداً</button>
+                    <button class="menu-btn back-btn" onclick="showMainMenu()">🏠 القائمة</button>
+                </div>
+            </div>
+
+            <div class="controls-area">
+                <button class="btn" id="btnUp">⬆️</button>
+                <div class="row">
+                    <button class="btn" id="btnLeft">⬅️</button>
+                    <button class="btn" id="btnDown">⬇️</button>
+                    <button class="btn" id="btnRight">➡️</button>
+                </div>
             </div>
         </div>
 
-        <div class="controls-area">
-            <button class="btn" id="btnUp">⬆️</button>
-            <div class="row">
-                <button class="btn" id="btnLeft">⬅️</button>
-                <button class="btn" id="btnDown">⬇️</button>
-                <button class="btn" id="btnRight">➡️</button>
-            </div>
-        </div>
     </div>
 
     <script src="script.js"></script>

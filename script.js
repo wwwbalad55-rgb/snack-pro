@@ -1,97 +1,256 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-
-const scoreEl = document.getElementById('score');
-const highScoreEl = document.getElementById('highScore');
-const overlay = document.getElementById('gameOverlay');
-const overlayTitle = document.getElementById('overlayTitle');
-const actionBtn = document.getElementById('actionBtn');
-
 const eatSound = new Audio('eat.mp3');
 const deadSound = new Audio('dead.mp3');
 
-// القياسات
+// إعدادات الشاشة
 const box = 20;
-const canvasSize = 320; 
+const canvasSize = 320;
 canvas.width = canvasSize;
 canvas.height = canvasSize;
 
+// متغيرات اللعبة
 let snake = [];
 let food = {};
 let score = 0;
 let highScore = localStorage.getItem('snakeHighScore') || 0;
-highScoreEl.textContent = highScore;
-
-let direction = ''; 
+let direction = '';
 let nextDirection = '';
 let gameLoop = null;
 let isGameRunning = false;
-let gameSpeed = 180; // السرعة بطيئة ومناسبة
-
+let obstacles = [];
 let particles = [];
-let obstacles = []; // الجدار
-
-const foodIcons = ["🍎", "🍉", "🍇", "🍓", "🍒", "🍑", "🍍", "🍕", "🍔"];
 let currentFoodIcon = "🍎";
+const foodIcons = ["🍎", "🍉", "🍇", "🍓", "🍒", "🍑", "🍍", "🍕", "🍔"];
+
+// إعدادات المستخدم (تخزن في المتصفح)
+let selectedSkin = localStorage.getItem('snakeSkin') || '#2ecc71';
+let selectedMap = 1; // 1: Free, 2: Center, 3: Corners, 4: Box
+let difficulty = 'easy'; // easy, hard
+
+// === إدارة القوائم ===
+function showMainMenu() {
+    switchScreen('mainMenu');
+}
+
+function showShop() {
+    switchScreen('shopScreen');
+    renderShop();
+}
+
+function showMapSelection() {
+    switchScreen('mapScreen');
+}
+
+function switchScreen(screenId) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+    document.getElementById(screenId).classList.remove('hidden');
+}
+
+// === المتجر ===
+const skins = [
+    { color: '#2ecc71', name: 'كلاسيك' },
+    { color: '#3498db', name: 'أزرق' },
+    { color: '#f1c40f', name: 'ذهبي' },
+    { color: '#e74c3c', name: 'أحمر' },
+    { color: '#9b59b6', name: 'بنفسجي' }
+];
+
+function renderShop() {
+    const container = document.getElementById('skinsContainer');
+    container.innerHTML = '';
+    skins.forEach(skin => {
+        const div = document.createElement('div');
+        div.className = `skin-item ${selectedSkin === skin.color ? 'selected' : ''}`;
+        div.style.backgroundColor = skin.color;
+        div.onclick = () => {
+            selectedSkin = skin.color;
+            localStorage.setItem('snakeSkin', selectedSkin);
+            renderShop(); // تحديث العرض
+        };
+        container.appendChild(div);
+    });
+}
+
+// === اختيار الخريطة والصعوبة ===
+function selectMap(mapId, btn) {
+    selectedMap = mapId;
+    document.querySelectorAll('#mapScreen .options-grid:first-of-type .opt-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+}
+
+function selectDiff(diff, btn) {
+    difficulty = diff;
+    document.querySelectorAll('#mapScreen .options-grid:last-of-type .opt-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+}
+
+// === محرك اللعبة ===
+function startGame() {
+    switchScreen('gameScreen');
+    initGame();
+}
 
 function initGame() {
-    snake = [{ x: 5 * box, y: 5 * box }]; 
-    direction = ''; 
+    snake = [{ x: 8 * box, y: 8 * box }];
+    direction = '';
     nextDirection = '';
     score = 0;
     particles = [];
-    obstacles = []; 
-    createCenterWall(); // انشاء الجدار
+    obstacles = [];
     
-    scoreEl.textContent = score;
-    highScoreEl.textContent = localStorage.getItem('snakeHighScore') || 0;
+    // إعداد السرعة
+    let speed = difficulty === 'hard' ? 90 : 140; // الصعب أسرع
+    
+    // بناء الخريطة
+    buildMap();
+
+    document.getElementById('score').textContent = score;
+    document.getElementById('highScore').textContent = highScore;
+    document.getElementById('gameOverlay').classList.add('hidden');
     
     food = generateFood();
     currentFoodIcon = foodIcons[Math.floor(Math.random() * foodIcons.length)];
     
     isGameRunning = true;
-    overlay.classList.add('hidden');
-    
     if (gameLoop) clearInterval(gameLoop);
-    gameLoop = setInterval(draw, gameSpeed);
+    gameLoop = setInterval(draw, speed);
 }
 
-// دالة الجدار الوسطي
-function createCenterWall() {
-    for (let i = 4; i < 12; i++) {
-        obstacles.push({ x: i * box, y: 8 * box }); 
+function buildMap() {
+    obstacles = [];
+    // الخريطة 2: جدار الوسط
+    if (selectedMap === 2) {
+        for (let i = 4; i < 12; i++) obstacles.push({ x: i * box, y: 8 * box });
     }
+    // الخريطة 3: الزوايا القاتلة (طلبك) + الوسط
+    else if (selectedMap === 3) {
+        // الوسط
+        for (let i = 5; i < 11; i++) obstacles.push({ x: i * box, y: 8 * box });
+        // الزوايا
+        obstacles.push({x: 2*box, y: 2*box}, {x: 3*box, y: 2*box}, {x: 2*box, y: 3*box}); // فوق يسار
+        obstacles.push({x: 13*box, y: 2*box}, {x: 12*box, y: 2*box}, {x: 13*box, y: 3*box}); // فوق يمين
+        obstacles.push({x: 2*box, y: 13*box}, {x: 3*box, y: 13*box}, {x: 2*box, y: 12*box}); // تحت يسار
+        obstacles.push({x: 13*box, y: 13*box}, {x: 12*box, y: 13*box}, {x: 13*box, y: 12*box}); // تحت يمين
+    }
+    // الخريطة 4: الصندوق (الحواف مغلقة - سيتم التعامل معها في المنطق)
+}
+
+function resetGame() {
+    initGame();
+}
+
+function draw() {
+    if (nextDirection) direction = nextDirection;
+
+    // الخلفية
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, canvasSize, canvasSize);
+
+    // رسم الحواجز
+    ctx.fillStyle = "#e74c3c";
+    ctx.shadowBlur = 5; ctx.shadowColor = "red";
+    obstacles.forEach(obs => {
+        ctx.fillRect(obs.x, obs.y, box - 2, box - 2);
+    });
+    // رسم حدود للصندوق إذا كانت الخريطة 4
+    if (selectedMap === 4) {
+        ctx.strokeStyle = "red";
+        ctx.lineWidth = 4;
+        ctx.strokeRect(0,0,canvasSize,canvasSize);
+    }
+    ctx.shadowBlur = 0;
+
+    // رسم الانفجار
+    for (let i = particles.length - 1; i >= 0; i--) {
+        let p = particles[i];
+        p.x += p.vx; p.y += p.vy; p.life -= 0.05;
+        if (p.life <= 0) particles.splice(i, 1);
+        else {
+            ctx.globalAlpha = p.life;
+            ctx.fillStyle = p.color;
+            ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, Math.PI * 2); ctx.fill();
+            ctx.globalAlpha = 1.0;
+        }
+    }
+
+    // رسم الطعام
+    ctx.font = "20px Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(currentFoodIcon, food.x + box/2, food.y + box/2 + 2);
+
+    // رسم الحية (باللون المختار من المتجر)
+    for (let i = 0; i < snake.length; i++) {
+        ctx.fillStyle = i === 0 ? "#fff" : selectedSkin;
+        ctx.shadowBlur = 10; ctx.shadowColor = selectedSkin;
+        ctx.fillRect(snake[i].x, snake[i].y, box - 2, box - 2);
+        
+        if (i === 0) { // العيون
+            ctx.fillStyle = "black";
+            ctx.shadowBlur = 0;
+            ctx.fillRect(snake[i].x + 5, snake[i].y + 5, 4, 4);
+            ctx.fillRect(snake[i].x + 11, snake[i].y + 5, 4, 4);
+        }
+    }
+    ctx.shadowBlur = 0;
+
+    // انتظار البداية
+    if (direction == '') return;
+
+    // الحركة
+    let snakeX = snake[0].x;
+    let snakeY = snake[0].y;
+
+    if (direction == 'LEFT') snakeX -= box;
+    if (direction == 'UP') snakeY -= box;
+    if (direction == 'RIGHT') snakeX += box;
+    if (direction == 'DOWN') snakeY += box;
+
+    // === منطق الحدود (Portal vs Box) ===
+    if (selectedMap === 4) { 
+        // خريطة الصندوق: الموت عند الحواف
+        if (snakeX < 0 || snakeX >= canvasSize || snakeY < 0 || snakeY >= canvasSize) return gameOver();
+    } else {
+        // البورتال: الانتقال للجهة المقابلة
+        if (snakeX < 0) snakeX = canvasSize - box;
+        else if (snakeX >= canvasSize) snakeX = 0;
+        if (snakeY < 0) snakeY = canvasSize - box;
+        else if (snakeY >= canvasSize) snakeY = 0;
+    }
+
+    // الاصطدام بالنفس
+    for (let i = 0; i < snake.length; i++) {
+        if (snakeX == snake[i].x && snakeY == snake[i].y) return gameOver();
+    }
+    // الاصطدام بالحواجز
+    for (let i = 0; i < obstacles.length; i++) {
+        if (snakeX == obstacles[i].x && snakeY == obstacles[i].y) return gameOver();
+    }
+
+    let newHead = { x: snakeX, y: snakeY };
+
+    if (snakeX == food.x && snakeY == food.y) {
+        eatSound.currentTime = 0; eatSound.play();
+        createExplosion(food.x, food.y, selectedSkin);
+        score++;
+        document.getElementById('score').textContent = score;
+        currentFoodIcon = foodIcons[Math.floor(Math.random() * foodIcons.length)];
+        food = generateFood();
+    } else {
+        snake.pop();
+    }
+    snake.unshift(newHead);
 }
 
 function createExplosion(x, y, color) {
     for (let i = 0; i < 15; i++) { 
         particles.push({
-            x: x + box / 2,
-            y: y + box / 2,
-            vx: (Math.random() - 0.5) * 10,
-            vy: (Math.random() - 0.5) * 10,
-            life: 1.0, 
-            color: color 
+            x: x + box / 2, y: y + box / 2,
+            vx: (Math.random() - 0.5) * 10, vy: (Math.random() - 0.5) * 10,
+            life: 1.0, color: color 
         });
     }
-}
-
-function gameOver() {
-    deadSound.play();
-    isGameRunning = false;
-    clearInterval(gameLoop);
-    
-    if (score > highScore) {
-        highScore = score;
-        localStorage.setItem('snakeHighScore', highScore);
-        overlayTitle.textContent = "رقم قياسي جديد! 👑";
-        overlayTitle.style.color = "#f1c40f";
-    } else {
-        overlayTitle.textContent = "خسرت!";
-        overlayTitle.style.color = "red";
-    }
-    highScoreEl.textContent = highScore;
-    overlay.classList.remove('hidden');
 }
 
 function generateFood() {
@@ -103,12 +262,27 @@ function generateFood() {
         };
         let onSnake = snake.some(s => s.x === newFood.x && s.y === newFood.y);
         let onObstacle = obstacles.some(o => o.x === newFood.x && o.y === newFood.y);
-        
         if (!onSnake && !onObstacle) break;
     }
     return newFood;
 }
 
+function gameOver() {
+    deadSound.play();
+    isGameRunning = false;
+    clearInterval(gameLoop);
+    if (score > highScore) {
+        highScore = score;
+        localStorage.setItem('snakeHighScore', highScore);
+        document.getElementById('overlayTitle').textContent = "رقم قياسي! 👑";
+    } else {
+        document.getElementById('overlayTitle').textContent = "خسرت!";
+    }
+    document.getElementById('highScore').textContent = highScore;
+    document.getElementById('gameOverlay').classList.remove('hidden');
+}
+
+// التحكم
 function handleInput(dir) {
     if (!isGameRunning) return;
     if (dir === 'UP' && direction !== 'DOWN') nextDirection = 'UP';
@@ -129,103 +303,6 @@ document.addEventListener('keydown', (e) => {
     else if (e.keyCode == 40) handleInput('DOWN');
 });
 
-function draw() {
-    if (nextDirection) direction = nextDirection;
-
-    ctx.fillStyle = "#000";
-    ctx.fillRect(0, 0, canvasSize, canvasSize);
-
-    // رسم الجدار
-    ctx.fillStyle = "#e74c3c";
-    ctx.shadowBlur = 5;
-    ctx.shadowColor = "red";
-    for (let i = 0; i < obstacles.length; i++) {
-        ctx.fillRect(obstacles[i].x, obstacles[i].y, box - 2, box - 2);
-    }
-    ctx.shadowBlur = 0;
-
-    // رسم الانفجار
-    for (let i = particles.length - 1; i >= 0; i--) {
-        let p = particles[i];
-        p.x += p.vx; p.y += p.vy; p.life -= 0.05;
-        if (p.life <= 0) particles.splice(i, 1);
-        else {
-            ctx.globalAlpha = p.life;
-            ctx.fillStyle = p.color;
-            ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, Math.PI * 2); ctx.fill();
-            ctx.globalAlpha = 1.0;
-        }
-    }
-
-    // رسم الاكل
-    ctx.font = "20px Arial";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(currentFoodIcon, food.x + box/2, food.y + box/2 + 2);
-
-    // رسم الحية
-    for (let i = 0; i < snake.length; i++) {
-        let hue = (score * 10) % 360; 
-        let color = i == 0 ? "#fff" : `hsl(${hue}, 100%, 50%)`;
-        ctx.fillStyle = color;
-        ctx.fillRect(snake[i].x, snake[i].y, box - 2, box - 2);
-        
-        if (i == 0) { 
-            ctx.fillStyle = "black";
-            ctx.fillRect(snake[i].x + 5, snake[i].y + 5, 4, 4);
-            ctx.fillRect(snake[i].x + 11, snake[i].y + 5, 4, 4);
-        }
-    }
-
-    // رسالة البداية الجديدة
-    if (direction == '') {
-        ctx.fillStyle = "white";
-        ctx.font = "bold 20px Cairo";
-        ctx.textAlign = "center";
-        ctx.fillText("🚀 اضغط للانطلاق", canvasSize/2, canvasSize/2 + 60);
-        return;
-    }
-
-    let snakeX = snake[0].x;
-    let snakeY = snake[0].y;
-
-    if (direction == 'LEFT') snakeX -= box;
-    if (direction == 'UP') snakeY -= box;
-    if (direction == 'RIGHT') snakeX += box;
-    if (direction == 'DOWN') snakeY += box;
-
-    // 🔥 البورتال: اذا عبرت الحدود ترجع من الجهة الثانية 🔥
-    if (snakeX < 0) snakeX = canvasSize - box;
-    else if (snakeX >= canvasSize) snakeX = 0;
-    
-    if (snakeY < 0) snakeY = canvasSize - box;
-    else if (snakeY >= canvasSize) snakeY = 0;
-
-    // الخسارة (اصطدام بالنفس)
-    for (let i = 0; i < snake.length; i++) {
-        if (snakeX == snake[i].x && snakeY == snake[i].y) return gameOver();
-    }
-
-    // الخسارة (اصطدام بالجدار)
-    for (let i = 0; i < obstacles.length; i++) {
-        if (snakeX == obstacles[i].x && snakeY == obstacles[i].y) return gameOver();
-    }
-
-    let newHead = { x: snakeX, y: snakeY };
-
-    if (snakeX == food.x && snakeY == food.y) {
-        eatSound.currentTime = 0; eatSound.play();
-        let hue = (score * 10) % 360;
-        createExplosion(food.x, food.y, `hsl(${hue}, 100%, 50%)`);
-        score++;
-        scoreEl.textContent = score;
-        currentFoodIcon = foodIcons[Math.floor(Math.random() * foodIcons.length)];
-        food = generateFood();
-    } else {
-        snake.pop();
-    }
-    snake.unshift(newHead);
-}
-
-actionBtn.addEventListener('click', initGame);
-initGame();
+// تهيئة القوائم عند البدء
+showMainMenu();
+document.getElementById('highScore').textContent = highScore;
