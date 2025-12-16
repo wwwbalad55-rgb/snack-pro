@@ -92,7 +92,7 @@ function startGame() {
 }
 
 function initGame() {
-    // 🛠️ تعديل مكان البداية: نبدأ من (4,4) بعيداً عن الجدار الوسطي والزوايا
+    // 🛠️ البداية من الزاوية (4,4) بعيداً عن الحواجز
     snake = [{ x: 4 * box, y: 4 * box }];
     direction = '';
     nextDirection = '';
@@ -100,8 +100,9 @@ function initGame() {
     particles = [];
     obstacles = [];
     
-    // إعداد السرعة
-    let speed = difficulty === 'hard' ? 90 : 130; 
+    // 🚦 ضبط السرعة: كل ما زاد الرقم، صارت اللعبة أبطأ وأكثر سلاسة
+    // السهل: 190 (بطيء ومسيطر عليه) | الصعب: 130 (سريع بس ملحوك عليه)
+    let speed = difficulty === 'hard' ? 130 : 190;
     
     // بناء الخريطة
     buildMap();
@@ -128,7 +129,7 @@ function buildMap() {
     else if (selectedMap === 3) {
         // الوسط
         for (let i = 5; i < 11; i++) obstacles.push({ x: i * box, y: 8 * box });
-        // الزوايا (مربعات قاتلة)
+        // الزوايا
         obstacles.push({x: 1*box, y: 1*box}, {x: 2*box, y: 1*box}, {x: 1*box, y: 2*box}); 
         obstacles.push({x: 14*box, y: 1*box}, {x: 13*box, y: 1*box}, {x: 14*box, y: 2*box}); 
         obstacles.push({x: 1*box, y: 14*box}, {x: 2*box, y: 14*box}, {x: 1*box, y: 13*box}); 
@@ -147,7 +148,7 @@ function draw() {
     ctx.fillStyle = "#000";
     ctx.fillRect(0, 0, canvasSize, canvasSize);
 
-    // رسم الحواجز (بدون توهج لتقليل اللاك)
+    // رسم الحواجز
     ctx.fillStyle = "#e74c3c";
     obstacles.forEach(obs => {
         ctx.fillRect(obs.x, obs.y, box - 2, box - 2);
@@ -163,7 +164,7 @@ function draw() {
     // رسم الانفجار
     for (let i = particles.length - 1; i >= 0; i--) {
         let p = particles[i];
-        p.x += p.vx; p.y += p.vy; p.life -= 0.1; // يختفي اسرع
+        p.x += p.vx; p.y += p.vy; p.life -= 0.1; 
         if (p.life <= 0) particles.splice(i, 1);
         else {
             ctx.globalAlpha = p.life;
@@ -179,11 +180,10 @@ function draw() {
     ctx.textBaseline = "middle";
     ctx.fillText(currentFoodIcon, food.x + box/2, food.y + box/2 + 2);
 
-    // رسم الحية (بدون Shadow Blur لزيادة السرعة والسلاسة) 🚀
+    // رسم الحية
     for (let i = 0; i < snake.length; i++) {
         ctx.fillStyle = i === 0 ? "#fff" : selectedSkin;
-        // ⚠️ شلت التوهج هنا حتى لا يعلك الموبايل
-        ctx.fillRect(snake[i].x, snake[i].y, box - 2, box - 2);
+        ctx.fillRect(snake[i].x, snake[i].y, box - 2, box - 2); // بدون ظل = أسرع أداء
         
         if (i === 0) { // العيون
             ctx.fillStyle = "black";
@@ -202,7 +202,7 @@ function draw() {
     if (direction == 'RIGHT') snakeX += box;
     if (direction == 'DOWN') snakeY += box;
 
-    // منطق الحدود
+    // حدود البورتال
     if (selectedMap === 4) { 
         if (snakeX < 0 || snakeX >= canvasSize || snakeY < 0 || snakeY >= canvasSize) return gameOver();
     } else {
@@ -236,8 +236,8 @@ function draw() {
 }
 
 function createExplosion(x, y, color) {
-    if (particles.length > 20) particles.shift(); // تقليل عدد الجسيمات لعدم التعليق
-    for (let i = 0; i < 8; i++) { // تقليل عدد الشظايا
+    if (particles.length > 20) particles.shift(); 
+    for (let i = 0; i < 8; i++) { 
         particles.push({
             x: x + box / 2, y: y + box / 2,
             vx: (Math.random() - 0.5) * 8, vy: (Math.random() - 0.5) * 8,
