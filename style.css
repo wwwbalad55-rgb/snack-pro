@@ -1,90 +1,55 @@
-/* style.css */
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    /* خلفية متدرجة دائرية تعطي عمق 3D */
-    background: radial-gradient(circle, #2b32b2, #1488cc); 
-    background-color: #1488cc;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+    font-family: 'Press Start 2P', cursive;
     color: white;
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    overflow: hidden;
+    overflow: hidden; /* يمنع السكرول للصفحة كلها */
+    touch-action: none; /* مهم جدا للموبايل */
 }
 
-.main-wrapper {
+.game-wrapper {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 15px;
-    z-index: 2;
-}
-
-h1 {
-    font-size: 3rem;
-    text-transform: uppercase;
-    /* تأثير نص 3D */
-    text-shadow: 
-        0 1px 0 #ccc, 
-        0 2px 0 #c9c9c9, 
-        0 3px 0 #bbb, 
-        0 4px 0 #b9b9b9, 
-        0 5px 0 #aaa, 
-        0 6px 1px rgba(0,0,0,.1), 
-        0 0 5px rgba(0,0,0,.1), 
-        0 1px 3px rgba(0,0,0,.3), 
-        0 3px 5px rgba(0,0,0,.2), 
-        0 5px 10px rgba(0,0,0,.25), 
-        0 10px 10px rgba(0,0,0,.2), 
-        0 20px 20px rgba(0,0,0,.15);
-    margin-bottom: 10px;
-    color: #fff;
 }
 
 .score-board {
-    background: rgba(0, 0, 0, 0.5);
-    padding: 10px 30px;
-    border-radius: 50px;
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    font-size: 1.5rem;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    backdrop-filter: blur(5px);
+    margin-bottom: 10px;
+    font-size: 14px;
+    text-shadow: 2px 2px 0 #000;
+}
+
+.score-item {
+    display: inline-block;
+    margin: 0 10px;
 }
 
 #game-container {
     position: relative;
-    /* تكبير الإطار ليتناسب مع المربعات الجديدة */
-    width: 480px; 
-    height: 480px; 
-    border: 8px solid #34495e;
-    border-radius: 15px;
-    /* تأثير التوهج Neon Glow */
-    box-shadow: 
-        0 0 20px #0ff, 
-        inset 0 0 50px rgba(0,0,0,0.8);
-    background-color: #000;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    border: 4px solid #fff;
+    border-radius: 5px;
+    background-color: #222; 
 }
 
 canvas {
     display: block;
-    background: linear-gradient(135deg, #111, #222); /* أرضية مخططة خفيف */
-    border-radius: 5px;
+    background-color: #000;
 }
 
-/* شاشة التراكب */
-.overlay {
+/* شاشة الخسارة */
+#gameOverlay {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.9);
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.85);
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -92,108 +57,69 @@ canvas {
     z-index: 10;
 }
 
-.overlay.hidden {
-    display: none;
-}
+.hidden { display: none !important; }
 
-.btn {
-    padding: 15px 40px;
-    font-size: 1.5rem;
-    font-weight: bold;
-    background: linear-gradient(to bottom, #f39c12, #d35400);
+h1 { font-size: 30px; margin-bottom: 20px; text-shadow: 3px 3px 0 #000; }
+
+button {
+    padding: 15px 30px;
+    font-size: 16px;
+    font-family: inherit;
+    background: #27ae60;
     color: white;
     border: none;
-    border-radius: 10px;
     cursor: pointer;
-    box-shadow: 0 5px 0 #a04000;
-    transition: all 0.1s;
+    box-shadow: 0 4px 0 #1e8449;
+    transition: transform 0.1s;
 }
 
-.btn:active {
-    box-shadow: 0 2px 0 #a04000;
-    transform: translateY(3px);
-}
-.score-item {
-    display: inline-block;
-    margin: 0 15px;
-    font-weight: bold;
-    color: #f1c40f; /* لون ذهبي للتميز */
+button:active { transform: translateY(4px); box-shadow: none; }
 
-}/* تنسيق أزرار الموبايل */
-/* --- كود أزرار الموبايل الجديد --- */
+/* === تصميم أزرار الموبايل الاحترافي === */
 .mobile-controls {
     margin-top: 15px;
-    width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    padding-bottom: 20px;
+    gap: 5px;
+    padding-bottom: 10px;
 }
 
 .horizontal-btns {
     display: flex;
-    gap: 20px; /* مسافة بين الازرار */
-    margin-top: 5px;
+    gap: 20px;
 }
 
 .control-btn {
-    width: 65px;
-    height: 65px;
-    background: rgba(255, 255, 255, 0.15);
-    border: 2px solid rgba(255, 255, 255, 0.6);
+    width: 60px;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.5);
     border-radius: 50%;
-    color: white;
     font-size: 24px;
     display: flex;
-    align-items: center;
     justify-content: center;
-    cursor: pointer;
-    touch-action: manipulation; /* يمنع الزووم والتعليق */
-    -webkit-user-select: none;
+    align-items: center;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.3);
+    /* تحسينات اللمس */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
     user-select: none;
 }
 
 .control-btn:active {
-    background: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.5);
     transform: scale(0.95);
 }
 
+.instruction {
+    margin-top: 10px;
+    font-size: 10px;
+    opacity: 0.7;
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/* للموبايلات الصغيرة */
+@media (max-width: 500px) {
+    canvas { width: 340px; height: 340px; }
+    #game-container { width: 340px; height: 340px; }
+}

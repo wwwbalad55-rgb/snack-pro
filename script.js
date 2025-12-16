@@ -9,13 +9,13 @@ const overlay = document.getElementById('gameOverlay');
 const overlayTitle = document.getElementById('overlayTitle');
 const actionBtn = document.getElementById('actionBtn');
 
-// الأصوات
+// تحميل الأصوات
 const eatSound = new Audio('eat.mp3');
 const deadSound = new Audio('dead.mp3');
 
-// الإعدادات
-const box = 30;
-const canvasSize = 480;
+// إعدادات اللعبة
+const box = 20; // حجم المربع اصغر شوية لجمالية اكثر
+const canvasSize = 400; // حجم ثابت مناسب للموبايل
 canvas.width = canvasSize;
 canvas.height = canvasSize;
 
@@ -29,31 +29,29 @@ let direction = '';
 let nextDirection = '';
 let gameLoop = null;
 let isGameRunning = false;
-let isPaused = false;
-let gameSpeed = 120;
+let gameSpeed = 100;
+let particles = []; // للانفجار
 
-// مصفوفة الجزيئات (للانفجار)
-let particles = [];
-
+// تهيئة اللعبة
 function initGame() {
-    snake = [{ x: 8 * box, y: 8 * box }];
+    snake = [{ x: 10 * box, y: 10 * box }];
     direction = ''; 
     nextDirection = '';
     score = 0;
-    gameSpeed = 120;
-    particles = []; // تصفير الجزيئات
+    gameSpeed = 100;
+    particles = [];
     scoreDisplay.textContent = score;
     highScoreDisplay.textContent = localStorage.getItem('snakeHighScore') || 0;
     
     food = generateFood();
     isGameRunning = true;
-    isPaused = false;
     overlay.classList.add('hidden');
     
     if (gameLoop) clearInterval(gameLoop);
     gameLoop = setInterval(draw, gameSpeed);
 }
 
+// إنهاء اللعبة
 function gameOver() {
     deadSound.play();
     clearInterval(gameLoop);
@@ -84,113 +82,98 @@ function generateFood() {
             x: Math.floor(Math.random() * (canvasSize / box)) * box,
             y: Math.floor(Math.random() * (canvasSize / box)) * box
         };
+        // التأكد ان الاكل مو فوق الحية
         validPosition = !snake.some(segment => segment.x === newFood.x && segment.y === newFood.y);
     }
     return newFood;
 }
 
-// دالة صنع الانفجار
+// نظام الانفجار (Fireworks)
 function createExplosion(x, y) {
-    for (let i = 0; i < 15; i++) { // 15 قطعة بكل انفجار
+    for (let i = 0; i < 10; i++) {
         particles.push({
-            x: x + box / 2, // تبدأ من نص التفاحة
-            y: y + box / 2,
-            vx: (Math.random() - 0.5) * 10, // سرعة عشوائية بالاتجاهات
-            vy: (Math.random() - 0.5) * 10,
-            life: 1.0, // عمر الجزيء (يبدأ 1 ويقل)
-            color: `hsl(${Math.random() * 360}, 100%, 50%)` // لون عشوائي
+            x: x + box/2, y: y + box/2,
+            vx: (Math.random() - 0.5) * 8,
+            vy: (Math.random() - 0.5) * 8,
+            life: 1.0,
+            color: `hsl(${Math.random() * 360}, 100%, 50%)`
         });
     }
 }
 
+// التحكم بالكيبورد
 document.addEventListener('keydown', (event) => {
+    if (!isGameRunning) return;
     const key = event.keyCode;
-    if (key === 32 && isGameRunning) {
-        if (isPaused) {
-            gameLoop = setInterval(draw, gameSpeed);
-            isPaused = false;
-        } else {
-            clearInterval(gameLoop);
-            isPaused = true;
-            ctx.fillStyle = "rgba(0,0,0,0.5)";
-            ctx.fillRect(0,0,canvasSize,canvasSize);
-            ctx.fillStyle = "white";
-            ctx.font = "40px Arial";
-            ctx.textAlign = "center";
-            ctx.fillText("PAUSED", canvasSize/2, canvasSize/2);
-        }
-        return;
-    }
-
-    if (!isGameRunning || isPaused) return;
-
     if (key == 37 && direction != 'RIGHT') nextDirection = 'LEFT';
     else if (key == 38 && direction != 'DOWN') nextDirection = 'UP';
     else if (key == 39 && direction != 'LEFT') nextDirection = 'RIGHT';
     else if (key == 40 && direction != 'UP') nextDirection = 'DOWN';
 });
 
+// === التحكم باللمس (أزرار الموبايل) ===
+function handleMobileInput(dir) {
+    if (!isGameRunning) return;
+    if (dir === 'UP' && direction !== 'DOWN') nextDirection = 'UP';
+    if (dir === 'DOWN' && direction !== 'UP') nextDirection = 'DOWN';
+    if (dir === 'LEFT' && direction !== 'RIGHT') nextDirection = 'LEFT';
+    if (dir === 'RIGHT' && direction !== 'LEFT') nextDirection = 'RIGHT';
+}
+
+// ربط الأزرار مع منع السكرول والزووم
+['btnUp', 'btnDown', 'btnLeft', 'btnRight'].forEach(id => {
+    const btn = document.getElementById(id);
+    
+    // لمس (Touch)
+    btn.addEventListener('touchstart', (e) => {
+        e.preventDefault(); // يمنع مشاكل الموبايل
+        handleMobileInput(id.replace('btn', '').toUpperCase());
+    }, { passive: false });
+    
+    // ماوس (Click) للحاسبة
+    btn.addEventListener('mousedown', (e) => {
+        handleMobileInput(id.replace('btn', '').toUpperCase());
+    });
+});
+
+// الرسم
 function draw() {
     if (nextDirection) direction = nextDirection;
 
-    // مسح الشاشة مع ترك أثر خفيف (Trail Effect) اختياري، هنا مسح كامل
-    ctx.clearRect(0, 0, canvasSize, canvasSize);
+    // مسح الشاشة
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, canvasSize, canvasSize);
 
-    // 1. رسم وتحديث الجزيئات (الانفجار)
+    // رسم الانفجار
     for (let i = particles.length - 1; i >= 0; i--) {
         let p = particles[i];
-        p.x += p.vx;
-        p.y += p.vy;
-        p.life -= 0.05; // يختفي تدريجياً
-
-        if (p.life <= 0) {
-            particles.splice(i, 1); // حذف الجزيء الميت
-        } else {
-            ctx.globalAlpha = p.life; // شفافية حسب العمر
+        p.x += p.vx; p.y += p.vy; p.life -= 0.05;
+        if (p.life <= 0) particles.splice(i, 1);
+        else {
+            ctx.globalAlpha = p.life;
             ctx.fillStyle = p.color;
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.globalAlpha = 1.0; // ارجاع الشفافية للطبيعي
+            ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI*2); ctx.fill();
+            ctx.globalAlpha = 1.0;
         }
     }
 
-    // 2. رسم الطعام
-    ctx.shadowBlur = 15;
-    ctx.shadowColor = "#ff3333";
-    ctx.fillStyle = "#ff3333";
-    ctx.beginPath();
-    ctx.arc(food.x + box/2, food.y + box/2, box/2 - 2, 0, 2*Math.PI);
-    ctx.fill();
-    ctx.fillStyle = "white";
-    ctx.beginPath();
-    ctx.arc(food.x + box/2 - 4, food.y + box/2 - 4, 3, 0, 2*Math.PI);
-    ctx.fill();
+    // رسم الطعام
+    ctx.shadowBlur = 15; ctx.shadowColor = "red";
+    ctx.fillStyle = "red";
+    ctx.beginPath(); ctx.arc(food.x + box/2, food.y + box/2, box/2 - 2, 0, Math.PI*2); ctx.fill();
     ctx.shadowBlur = 0;
 
-    // 3. رسم الحية
+    // رسم الحية
     for (let i = 0; i < snake.length; i++) {
         ctx.fillStyle = (i == 0) ? "#00ff00" : "#00cc00";
-        ctx.shadowBlur = 5;
-        ctx.shadowColor = "black";
-        
-        if (i == 0) {
-            ctx.beginPath();
-            ctx.arc(snake[i].x + box/2, snake[i].y + box/2, box/2, 0, 2*Math.PI);
-            ctx.fill();
-            // عيون
-            ctx.fillStyle = "black";
-            ctx.beginPath(); ctx.arc(snake[i].x + box/2 - 5, snake[i].y + box/2 - 5, 3, 0, 2*Math.PI); ctx.fill();
-            ctx.beginPath(); ctx.arc(snake[i].x + box/2 + 5, snake[i].y + box/2 - 5, 3, 0, 2*Math.PI); ctx.fill();
-        } else {
-            ctx.beginPath();
-            ctx.roundRect(snake[i].x + 1, snake[i].y + 1, box - 2, box - 2, 5);
-            ctx.fill();
+        if (i == 0) { // رأس الحية
+             ctx.beginPath(); ctx.arc(snake[i].x + box/2, snake[i].y + box/2, box/2, 0, Math.PI*2); ctx.fill();
+        } else { // جسم الحية
+            ctx.fillRect(snake[i].x + 1, snake[i].y + 1, box - 2, box - 2);
         }
-        ctx.shadowBlur = 0;
     }
 
-    if (direction == '') return;
+    if (direction == '') return; // اللعبة واقفة تنتظر حركة
 
     let snakeX = snake[0].x;
     let snakeY = snake[0].y;
@@ -200,35 +183,20 @@ function draw() {
     if (direction == 'RIGHT') snakeX += box;
     if (direction == 'DOWN') snakeY += box;
 
-    // الخسارة
-    if (snakeX < 0 || snakeX >= canvasSize || snakeY < 0 || snakeY >= canvasSize) {
-        return gameOver();
-    }
+    // حدود الخسارة
+    if (snakeX < 0 || snakeX >= canvasSize || snakeY < 0 || snakeY >= canvasSize) return gameOver();
     for (let i = 0; i < snake.length; i++) {
-         if (snakeX == snake[i].x && snakeY == snake[i].y) {
-             return gameOver();
-         }
+        if (snakeX == snake[i].x && snakeY == snake[i].y) return gameOver();
     }
 
     let newHead = { x: snakeX, y: snakeY };
 
     // الأكل
     if (snakeX == food.x && snakeY == food.y) {
-        eatSound.currentTime = 0;
-        eatSound.play();
-        
-        // تشغيل الانفجار بموقع الطعام 💥
+        eatSound.currentTime = 0; eatSound.play();
         createExplosion(food.x, food.y);
-        
         score++;
         scoreDisplay.textContent = score;
-
-        if (score % 5 === 0 && gameSpeed > 50) {
-            gameSpeed -= 10; 
-            clearInterval(gameLoop);
-            gameLoop = setInterval(draw, gameSpeed);
-        }
-
         food = generateFood();
     } else {
         snake.pop();
@@ -237,30 +205,9 @@ function draw() {
 }
 
 actionBtn.addEventListener('click', initGame);
-// === التحكم عن طريق أزرار الشاشة (للموبايل) ===
-document.getElementById('btnUp').addEventListener('touchstart', function(e) { 
-    e.preventDefault(); // يمنع زووم الشاشة
-    if (direction != 'DOWN') nextDirection = 'UP'; 
-});
-document.getElementById('btnDown').addEventListener('touchstart', function(e) { 
-    e.preventDefault();
-    if (direction != 'UP') nextDirection = 'DOWN'; 
-});
-document.getElementById('btnLeft').addEventListener('touchstart', function(e) { 
-    e.preventDefault();
-    if (direction != 'RIGHT') nextDirection = 'LEFT'; 
-});
-document.getElementById('btnRight').addEventListener('touchstart', function(e) { 
-    e.preventDefault();
-    if (direction != 'LEFT') nextDirection = 'RIGHT'; 
-});
 
-// دعم للماوس أيضاً (اذا تجرب بالحاسبة)
-document.getElementById('btnUp').addEventListener('click', () => { if (direction != 'DOWN') nextDirection = 'UP'; });
-document.getElementById('btnDown').addEventListener('click', () => { if (direction != 'UP') nextDirection = 'DOWN'; });
-document.getElementById('btnLeft').addEventListener('click', () => { if (direction != 'RIGHT') nextDirection = 'LEFT'; });
-document.getElementById('btnRight').addEventListener('click', () => { if (direction != 'LEFT') nextDirection = 'RIGHT'; });
-ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
+// رسالة البداية
+ctx.fillStyle = "white";
 ctx.font = "20px Arial";
 ctx.textAlign = "center";
-ctx.fillText("Ready?", canvasSize/2, canvasSize/2);
+ctx.fillText("Press Arrow / Button to Start", canvasSize/2, canvasSize/2);
