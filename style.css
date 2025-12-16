@@ -9,8 +9,7 @@
 }
 
 body {
-    /* 🔥 هنا رابط الخلفية 3D - بدله إذا عندك غير صورة 🔥 */
-    background: url('https://images.unsplash.com/photo-1534796636912-3b95b3ab5980?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2072&q=80') no-repeat center center fixed;
+    background: url('https://images.unsplash.com/photo-1534796636912-3b95b3ab5980?ixlib=rb-4.0.3&auto=format&fit=crop&w=2072&q=80') no-repeat center center fixed;
     background-size: cover;
     font-family: 'Cairo', sans-serif;
     height: 100vh;
@@ -21,13 +20,9 @@ body {
     overflow: hidden;
 }
 
-/* إضافة طبقة داكنة فوق الخلفية لتقرأ النصوص */
 body::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0, 0, 0, 0.6); /* شفافية السواد */
-    z-index: -1;
+    content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.6); z-index: -1;
 }
 
 .main-wrapper { width: 100%; max-width: 450px; text-align: center; position: relative; z-index: 1; }
@@ -44,26 +39,45 @@ body::before {
     font-size: 45px; color: #2ecc71; margin-bottom: 5px; 
     text-shadow: 0 0 20px #2ecc71, 0 0 10px black; 
 }
-.subtitle { color: #eee; font-size: 16px; margin-bottom: 35px; letter-spacing: 1px; text-shadow: 0 0 5px black; }
-.section-title { font-size: 22px; margin: 15px 0 10px; color: #f1c40f; text-shadow: 0 0 10px #f1c40f, 0 0 5px black; }
+.subtitle { color: #eee; font-size: 16px; margin-bottom: 20px; text-shadow: 0 0 5px black; }
+.section-title { font-size: 22px; margin: 15px 0 10px; color: #f1c40f; text-shadow: 0 0 10px #f1c40f; }
 
-/* الأزرار الفخمة */
+/* حقوق المطور - التصميم الجديد */
+.dev-name {
+    margin-top: 30px;
+    font-size: 14px;
+    color: #bbb;
+    background: rgba(0,0,0,0.4);
+    padding: 8px 20px;
+    border-radius: 50px;
+}
+.dev-highlight { color: #f1c40f; font-weight: bold; font-size: 16px; }
+
+/* الأزرار */
 .menu-btn {
     width: 85%; padding: 15px; margin: 10px 0;
     font-size: 18px; font-weight: bold; font-family: inherit; border: none;
     border-radius: 50px; color: white; cursor: pointer;
-    transition: transform 0.1s, box-shadow 0.1s;
-    text-transform: uppercase;
+    transition: transform 0.1s; text-transform: uppercase;
 }
 .start-btn-main { background: linear-gradient(45deg, #11998e, #38ef7d); box-shadow: 0 5px 15px rgba(46, 204, 113, 0.4); }
 .shop-btn { background: linear-gradient(45deg, #f12711, #f5af19); box-shadow: 0 5px 15px rgba(243, 156, 18, 0.4); }
-.start-btn { background: linear-gradient(45deg, #8E2DE2, #4A00E0); box-shadow: 0 5px 15px rgba(142, 68, 173, 0.4); width: 90%; }
+.start-btn { background: linear-gradient(45deg, #8E2DE2, #4A00E0); width: 90%; }
 .retry-btn { background: linear-gradient(45deg, #00b09b, #96c93d); }
-.back-btn { background: #34495e; width: 50%; padding: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-
+.back-btn { background: #34495e; width: 50%; padding: 10px; }
 .menu-btn:active { transform: scale(0.95); }
 
-/* الشبكات وتعديل حجم الأزرار الجديد */
+/* زر التوقيف */
+.pause-btn {
+    position: absolute; top: 10px; right: 10px;
+    width: 40px; height: 40px; border-radius: 50%;
+    background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.3);
+    color: white; font-size: 20px; cursor: pointer; z-index: 20;
+    display: flex; justify-content: center; align-items: center;
+}
+.pause-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.4); }
+
+/* الشبكات */
 .skins-grid, .options-grid {
     display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 10px 0; width: 100%;
 }
@@ -71,31 +85,26 @@ body::before {
     width: 65px; height: 65px; border-radius: 15px;
     border: 2px solid rgba(255,255,255,0.2); cursor: pointer;
     display: flex; justify-content: center; align-items: center;
-    background: rgba(0,0,0,0.5); transition: 0.2s; backdrop-filter: blur(5px);
+    background: rgba(0,0,0,0.5); backdrop-filter: blur(5px);
 }
-/* تعديل حجم أزرار الخيارات لتناسب العدد الجديد */
 .opt-btn { width: 80px; height: 45px; font-size: 14px; color: white; font-weight: bold; }
-.selected { 
-    border-color: #f1c40f; background: rgba(241, 196, 15, 0.3); 
-    box-shadow: 0 0 15px rgba(241, 196, 15, 0.6); transform: scale(1.05);
-}
+.selected { border-color: #f1c40f; background: rgba(241, 196, 15, 0.3); transform: scale(1.05); }
 
 /* منطقة اللعب */
 .game-area {
     position: relative; 
-    border: 3px solid rgba(255,255,255,0.3); 
-    border-radius: 12px;
+    border: 3px solid rgba(255,255,255,0.3); border-radius: 12px;
     background: rgba(0,0,0,0.85); 
     width: 320px; height: 320px; margin: 0 auto;
-    box-shadow: 0 0 30px rgba(0,0,0,0.6); 
-    backdrop-filter: blur(10px);
+    box-shadow: 0 0 30px rgba(0,0,0,0.6); backdrop-filter: blur(10px);
 }
 canvas { width: 100%; height: 100%; display: block; border-radius: 9px; }
 
+/* Overlays */
 .overlay {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.9); display: flex;
-    flex-direction: column; justify-content: center; align-items: center; z-index: 10;
+    background: rgba(0,0,0,0.95); display: flex;
+    flex-direction: column; justify-content: center; align-items: center; z-index: 50;
     border-radius: 9px;
 }
 .game-over-text { font-size: 36px; color: #ff3333; text-shadow: 0 0 20px red; margin-bottom: 20px; }
@@ -104,17 +113,15 @@ canvas { width: 100%; height: 100%; display: block; border-radius: 9px; }
 .score-box { 
     background: rgba(255,255,255,0.15); padding: 8px 20px; 
     border-radius: 20px; font-size: 15px; border: 1px solid rgba(255,255,255,0.2);
-    backdrop-filter: blur(5px);
 }
 .score-box span { color: #f1c40f; font-weight: bold; font-size: 18px; margin-right: 5px; }
 
-/* أزرار التحكم */
+/* التحكم */
 .controls-area { margin-top: 20px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
 .row { display: flex; gap: 20px; }
 .btn {
     width: 65px; height: 65px; border-radius: 50%;
     background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3);
     color: white; font-size: 24px; display: flex; justify-content: center; align-items: center;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.4); backdrop-filter: blur(5px);
 }
 .btn:active { background: rgba(255,255,255,0.3); transform: scale(0.9); }

@@ -15,19 +15,18 @@ let highScore = localStorage.getItem('snakeHighScore') || 0;
 let direction = ''; 
 let nextDirection = '';
 let isRunning = false;
+let isPaused = false; // متغير للتوقيف
 let obstacles = [];
 let particles = [];
 let foodIcons = ["🍎", "🍉", "🍇", "🍓", "🍒", "🍑", "🍍", "🍕", "🍔"];
 let currentFoodIcon = "🍎";
 
-// إعدادات المحرك
 let lastRenderTime = 0;
 let gameSpeed = 10; 
 
-// المتغيرات الجديدة
 let selectedSkin = localStorage.getItem('snakeSkin') || '#2ecc71';
-let selectedMap = 1; // 1-5
-let difficulty = 'medium'; // slow, medium, fast
+let selectedMap = 1; 
+let difficulty = 'medium'; 
 
 // === إدارة القوائم ===
 function showMainMenu() { switchScreen('mainMenu'); }
@@ -37,9 +36,14 @@ function showMapSelection() { switchScreen('mapScreen'); }
 function switchScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
     document.getElementById(id).classList.remove('hidden');
+    // إخفاء أي Overlay مفتوح عند الانتقال للقائمة
+    document.getElementById('pauseOverlay').classList.add('hidden');
+    document.getElementById('gameOverOverlay').classList.add('hidden');
+    isRunning = false;
+    isPaused = false;
 }
 
-// === المتجر ===
+// === المتجر والخيارات ===
 const skins = [
     { color: '#2ecc71', name: 'نيون أخضر' },
     { color: '#3498db', name: 'نيون أزرق' },
@@ -92,8 +96,6 @@ function initGame() {
     particles = [];
     obstacles = [];
     
-    // 🔥 ضبط السرعات الجديدة 🔥
-    // بطيئة=6, متوسطة=10, سريعة=15
     if (difficulty === 'slow') gameSpeed = 6;
     else if (difficulty === 'medium') gameSpeed = 10;
     else if (difficulty === 'fast') gameSpeed = 15;
@@ -101,44 +103,58 @@ function initGame() {
     buildMap();
     document.getElementById('score').innerText = score;
     document.getElementById('highScore').innerText = highScore;
-    document.getElementById('gameOverlay').classList.add('hidden');
+    
+    // تأكد من إخفاء كل القوائم المنبثقة
+    document.getElementById('gameOverOverlay').classList.add('hidden');
+    document.getElementById('pauseOverlay').classList.add('hidden');
     
     food = generateFood();
     currentFoodIcon = foodIcons[Math.floor(Math.random() * foodIcons.length)];
     isRunning = true;
+    isPaused = false;
 }
 
-// 🛠️ بناء المودات الـ 5 الجديدة 🛠️
+function resetGame() {
+    // هذه الدالة الآن تقوم بعمل "ريست" كامل
+    initGame();
+}
+
+// === التوقيف والاستئناف (Pause Logic) ===
+function togglePause() {
+    if (!isRunning && !isPaused) return; // لا تعمل اذا اللعبة منتهية
+    
+    isPaused = !isPaused;
+    const pauseMenu = document.getElementById('pauseOverlay');
+    
+    if (isPaused) {
+        pauseMenu.classList.remove('hidden');
+    } else {
+        pauseMenu.classList.add('hidden');
+    }
+}
+
 function buildMap() {
     obstacles = [];
-    // المود 1: فضاء (حر - بورتال) - لا يوجد حواجز
-
-    // المود 2: جدار (وسط)
     if (selectedMap === 2) { 
         for (let i = 4; i < 12; i++) obstacles.push({ x: i * box, y: 8 * box });
-    } 
-    // المود 3: متاهة (زوايا + وسط)
-    else if (selectedMap === 3) { 
+    } else if (selectedMap === 3) { 
         for (let i = 5; i < 11; i++) obstacles.push({ x: i * box, y: 8 * box });
         obstacles.push({x: 1*box, y: 1*box}, {x: 2*box, y: 1*box}, {x: 1*box, y: 2*box}); 
         obstacles.push({x: 14*box, y: 1*box}, {x: 13*box, y: 1*box}, {x: 14*box, y: 2*box}); 
         obstacles.push({x: 1*box, y: 14*box}, {x: 2*box, y: 14*box}, {x: 1*box, y: 13*box}); 
         obstacles.push({x: 14*box, y: 14*box}, {x: 13*box, y: 14*box}, {x: 14*box, y: 13*box}); 
-    }
-    // المود 4: صحراء (حواجز أفقية متفرقة)
-    else if (selectedMap === 4) {
+    } else if (selectedMap === 4) {
         for(let i=2; i<6; i++) obstacles.push({x: i*box, y: 4*box});
         for(let i=10; i<14; i++) obstacles.push({x: i*box, y: 12*box});
         for(let i=6; i<10; i++) obstacles.push({x: i*box, y: 8*box});
     }
-    // المود 5: جليد (صندوق مغلق - يتم التعامل معه في منطق الحركة)
 }
 
-function resetGame() { initGame(); }
-
 function mainLoop(currentTime) {
-    if (!isRunning) return;
+    if (!isRunning) return; 
     window.requestAnimationFrame(mainLoop);
+    
+    if (isPaused) return; // إذا متوقفة لا تكمل التحديث
     
     const secondsSinceLastRender = (currentTime - lastRenderTime) / 1000;
     if (secondsSinceLastRender < 1 / gameSpeed) return;
@@ -160,11 +176,9 @@ function update() {
     if (direction == 'RIGHT') snakeX += box;
     if (direction == 'DOWN') snakeY += box;
 
-    // 🧊 منطق الحدود للمود 5 (جليد - صندوق مغلق) 🧊
     if (selectedMap === 5) {
         if (snakeX < 0 || snakeX >= canvasSize || snakeY < 0 || snakeY >= canvasSize) return gameOver();
     } else {
-        // باقي المودات: بورتال (حواف مفتوحة)
         if (snakeX < 0) snakeX = canvasSize - box;
         else if (snakeX >= canvasSize) snakeX = 0;
         if (snakeY < 0) snakeY = canvasSize - box;
@@ -195,7 +209,6 @@ function draw() {
     ctx.fillStyle = "#000";
     ctx.fillRect(0, 0, canvasSize, canvasSize);
 
-    // رسم حدود للمود 5 (جليد)
     if (selectedMap === 5) {
         ctx.strokeStyle = "#3498db"; ctx.lineWidth = 4; 
         ctx.shadowBlur = 10; ctx.shadowColor = "#3498db";
@@ -203,9 +216,7 @@ function draw() {
         ctx.shadowBlur = 0;
     }
 
-    ctx.shadowBlur = 10;
-    ctx.shadowColor = "#e74c3c";
-    ctx.fillStyle = "#e74c3c";
+    ctx.shadowBlur = 10; ctx.shadowColor = "#e74c3c"; ctx.fillStyle = "#e74c3c";
     obstacles.forEach(obs => ctx.fillRect(obs.x, obs.y, box - 2, box - 2));
     ctx.shadowBlur = 0;
 
@@ -214,28 +225,24 @@ function draw() {
         p.x += p.vx; p.y += p.vy; p.life -= 0.08;
         if (p.life <= 0) particles.splice(i, 1);
         else {
-            ctx.globalAlpha = p.life; 
-            ctx.fillStyle = p.color;
+            ctx.globalAlpha = p.life; ctx.fillStyle = p.color;
             ctx.shadowBlur = 5; ctx.shadowColor = p.color;
             ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI * 2); ctx.fill();
             ctx.globalAlpha = 1.0; ctx.shadowBlur = 0;
         }
     }
 
-    ctx.shadowBlur = 15;
-    ctx.shadowColor = "white";
+    ctx.shadowBlur = 15; ctx.shadowColor = "white";
     ctx.font = "20px Arial"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
     ctx.fillText(currentFoodIcon, food.x + box/2, food.y + box/2 + 2);
     ctx.shadowBlur = 0;
 
     for (let i = 0; i < snake.length; i++) {
-        ctx.shadowBlur = 15;
-        ctx.shadowColor = selectedSkin;
+        ctx.shadowBlur = 15; ctx.shadowColor = selectedSkin;
         ctx.fillStyle = i === 0 ? "#fff" : selectedSkin;
         ctx.fillRect(snake[i].x, snake[i].y, box - 2, box - 2);
         if (i === 0) { 
-            ctx.shadowBlur = 0;
-            ctx.fillStyle = "black";
+            ctx.shadowBlur = 0; ctx.fillStyle = "black";
             ctx.fillRect(snake[i].x + 5, snake[i].y + 5, 4, 4);
             ctx.fillRect(snake[i].x + 11, snake[i].y + 5, 4, 4);
         }
@@ -269,18 +276,18 @@ function generateFood() {
 }
 
 function gameOver() {
-    isRunning = false;
+    isRunning = false; // إيقاف اللوب
     deadSound.play().catch(()=>{});
     if (score > highScore) {
         highScore = score;
         localStorage.setItem('snakeHighScore', highScore);
     }
     document.getElementById('highScore').innerText = highScore;
-    document.getElementById('gameOverlay').classList.remove('hidden');
+    document.getElementById('gameOverOverlay').classList.remove('hidden');
 }
 
 function handleInput(dir) {
-    if (!isRunning) return;
+    if (!isRunning || isPaused) return; // لا تتحرك إذا متوقفة
     if (dir === 'UP' && direction !== 'DOWN') nextDirection = 'UP';
     if (dir === 'DOWN' && direction !== 'UP') nextDirection = 'DOWN';
     if (dir === 'LEFT' && direction !== 'RIGHT') nextDirection = 'LEFT';

@@ -13,8 +13,11 @@
         <div id="mainMenu" class="screen">
             <h1 class="game-title">🐍 Snake 3D</h1>
             <p class="subtitle">الإصدار المطور</p>
+            
             <button class="menu-btn start-btn-main" onclick="showMapSelection()">▶️ ابدأ اللعب</button>
             <button class="menu-btn shop-btn" onclick="showShop()">🛒 المتجر</button>
+
+            <div class="dev-name">Developed by: <span class="dev-highlight">اباذر حكمت</span></div>
         </div>
 
         <div id="shopScreen" class="screen hidden">
@@ -53,9 +56,17 @@
             <div class="game-area">
                 <canvas id="gameCanvas"></canvas>
                 
-                <div id="gameOverlay" class="overlay hidden">
+                <button class="pause-btn" onclick="togglePause()">⏸️</button>
+
+                <div id="pauseOverlay" class="overlay hidden">
+                    <h2 class="section-title">⏸️ اللعبة متوقفة</h2>
+                    <button class="menu-btn" onclick="togglePause()">▶️ استئناف</button>
+                    <button class="menu-btn back-btn" onclick="showMainMenu()">🏠 خروج</button>
+                </div>
+                
+                <div id="gameOverOverlay" class="overlay hidden">
                     <h2 class="game-over-text">GAME OVER</h2>
-                    <button class="menu-btn retry-btn" onclick="resetGame()">🔄 إعادة المحاولة</button>
+                    <button class="menu-btn retry-btn" onclick="resetGame()">🔄 العب مجدداً</button>
                     <button class="menu-btn back-btn" onclick="showMainMenu()">🏠 القائمة</button>
                 </div>
             </div>
