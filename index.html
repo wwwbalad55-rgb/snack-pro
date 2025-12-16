@@ -3,43 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Snake Pro Speed ⚡</title>
+    <title>Snake Ultimate 🐍</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <div class="main-wrapper">
-        <div class="game-header">
+        
+        <div id="mainMenu" class="screen">
+            <h1 class="game-title">🐍 Snake Ultimate</h1>
+            <p style="color:#aaa; font-size:14px">الإصدار الكامل والسريع</p>
+            <button class="menu-btn" onclick="showMapSelection()">▶️ ابدأ اللعب</button>
+            <button class="menu-btn shop-btn" onclick="showShop()">🛒 المتجر (Skins)</button>
+        </div>
+
+        <div id="shopScreen" class="screen hidden">
+            <h2>🎨 اختر لون الحية</h2>
+            <div class="skins-grid" id="skinsContainer"></div>
+            <button class="menu-btn back-btn" onclick="showMainMenu()">🔙 رجوع</button>
+        </div>
+
+        <div id="mapScreen" class="screen hidden">
+            <h2>🗺️ اختر الخريطة</h2>
+            <div class="options-grid">
+                <button class="opt-btn selected" onclick="selectMap(1, this)">🌀 حرة</button>
+                <button class="opt-btn" onclick="selectMap(2, this)">🧱 وسط</button>
+                <button class="opt-btn" onclick="selectMap(3, this)">☠️ زوايا</button>
+            </div>
+
+            <h2>🔥 الصعوبة</h2>
+            <div class="options-grid">
+                <button class="opt-btn selected" onclick="selectDiff('easy', this)">😌 عادي</button>
+                <button class="opt-btn" onclick="selectDiff('hard', this)">😈 سريع</button>
+            </div>
+
+            <button class="menu-btn start-btn" onclick="startGame()">🚀 انطلق</button>
+            <button class="menu-btn back-btn" onclick="showMainMenu()">🔙 الغاء</button>
+        </div>
+
+        <div id="gameScreen" class="screen hidden">
             <div class="score-board">
-                <div class="score-box">النتيجة <span id="score">0</span></div>
-                <div class="score-box">الأفضل <span id="highScore">0</span></div>
+                <div class="score-box">النتيجة: <span id="score">0</span></div>
+                <div class="score-box">الأفضل: <span id="highScore">0</span></div>
+            </div>
+
+            <div class="game-area">
+                <canvas id="gameCanvas"></canvas>
+                
+                <div id="gameOverlay" class="overlay hidden">
+                    <h2 id="overlayTitle">GAME OVER</h2>
+                    <button class="menu-btn" onclick="resetGame()">🔄 مرة أخرى</button>
+                    <button class="menu-btn back-btn" onclick="showMainMenu()">🏠 القائمة</button>
+                </div>
+            </div>
+
+            <div class="controls-area">
+                <button class="btn" id="btnUp">⬆️</button>
+                <div class="row">
+                    <button class="btn" id="btnLeft">⬅️</button>
+                    <button class="btn" id="btnDown">⬇️</button>
+                    <button class="btn" id="btnRight">➡️</button>
+                </div>
             </div>
         </div>
 
-        <div class="game-container">
-            <canvas id="gameCanvas"></canvas>
-            
-            <div id="mainMenu" class="overlay">
-                <h1 class="title">🐍 الثعبان السريع</h1>
-                <p class="subtitle">نسخة الأداء العالي</p>
-                <button class="btn-menu" onclick="startGame('easy')">😌 سهل (سلس)</button>
-                <button class="btn-menu btn-hard" onclick="startGame('hard')">😈 صعب (نار)</button>
-            </div>
-
-            <div id="gameOverScreen" class="overlay hidden">
-                <h2 class="title" style="color:#e74c3c">خسرت! 💀</h2>
-                <button class="btn-menu" onclick="showMainMenu()">🏠 القائمة</button>
-            </div>
-        </div>
-
-        <div class="controls">
-            <button class="c-btn" id="btnUp">⬆️</button>
-            <div class="row">
-                <button class="c-btn" id="btnLeft">⬅️</button>
-                <button class="c-btn" id="btnDown">⬇️</button>
-                <button class="c-btn" id="btnRight">➡️</button>
-            </div>
-        </div>
     </div>
 
     <script src="script.js"></script>
