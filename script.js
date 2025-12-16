@@ -26,6 +26,7 @@ let direction = '';
 let nextDirection = '';
 let gameLoop = null;
 let isGameRunning = false;
+let gameSpeed = 130; // السرعة الابتدائية
 
 // مصفوفة الانفجار (الجسيمات)
 let particles = [];
@@ -35,7 +36,8 @@ function initGame() {
     direction = ''; 
     nextDirection = '';
     score = 0;
-    particles = []; // تصفير الانفجارات القديمة
+    gameSpeed = 130; // تصفير السرعة
+    particles = []; 
     scoreEl.textContent = score;
     highScoreEl.textContent = localStorage.getItem('snakeHighScore') || 0;
     
@@ -43,20 +45,21 @@ function initGame() {
     isGameRunning = true;
     overlay.classList.add('hidden');
     
+    // تشغيل اللعبة
     if (gameLoop) clearInterval(gameLoop);
-    gameLoop = setInterval(draw, 130);
+    gameLoop = setInterval(draw, gameSpeed);
 }
 
-// دالة صنع الانفجار
-function createExplosion(x, y) {
-    for (let i = 0; i < 15; i++) { // عدد الشظايا
+// دالة صنع الانفجار النيوني
+function createExplosion(x, y, color) {
+    for (let i = 0; i < 20; i++) { 
         particles.push({
             x: x + box / 2,
             y: y + box / 2,
-            vx: (Math.random() - 0.5) * 10, // سرعة الانتشار
-            vy: (Math.random() - 0.5) * 10,
-            life: 1.0, // شفافية الشظية
-            color: `hsl(${Math.random() * 360}, 100%, 50%)` // ألوان عشوائية
+            vx: (Math.random() - 0.5) * 12,
+            vy: (Math.random() - 0.5) * 12,
+            life: 1.0, 
+            color: color // نفس لون الحية
         });
     }
 }
@@ -120,51 +123,63 @@ function draw() {
     ctx.fillStyle = "#000";
     ctx.fillRect(0, 0, canvasSize, canvasSize);
 
-    // 2. رسم وتحديث الانفجار (الشظايا) 🔥
+    // 2. رسم الانفجار مع توهج ✨
     for (let i = particles.length - 1; i >= 0; i--) {
         let p = particles[i];
-        p.x += p.vx;
-        p.y += p.vy;
-        p.life -= 0.05; // اختفاء تدريجي
+        p.x += p.vx; p.y += p.vy; p.life -= 0.05;
 
         if (p.life <= 0) {
-            particles.splice(i, 1); // مسح الشظية اذا اختفت
+            particles.splice(i, 1);
         } else {
             ctx.globalAlpha = p.life;
+            ctx.shadowBlur = 10; // توهج
+            ctx.shadowColor = p.color;
             ctx.fillStyle = p.color;
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, Math.PI * 2); ctx.fill();
             ctx.globalAlpha = 1.0;
+            ctx.shadowBlur = 0; // تصفير التوهج
         }
     }
 
-    // 3. رسم الطعام
-    ctx.fillStyle = "red";
+    // 3. رسم الطعام (متوهج) 🍎✨
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = "red";
+    ctx.fillStyle = "#ff3333";
     ctx.beginPath(); ctx.arc(food.x + box/2, food.y + box/2, box/2 - 2, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0; // نطفي التوهج حتى لا يأثر ع الباقي
 
-    // 4. رسم الحية
+    // 4. رسم الحية (متوهجة وملونة) 🐍✨
     for (let i = 0; i < snake.length; i++) {
-        ctx.fillStyle = (i == 0) ? "#00ff00" : "#00cc00";
-        ctx.fillRect(snake[i].x, snake[i].y, box - 1, box - 1);
+        // لون متغير حسب النتيجة (قوس قزح تدريجي)
+        let hue = (score * 10) % 360; 
+        let color = i == 0 ? "#fff" : `hsl(${hue}, 100%, 50%)`;
         
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = color;
+        ctx.fillStyle = color;
+        
+        ctx.fillRect(snake[i].x, snake[i].y, box - 2, box - 2);
+        
+        // العيون
         if (i == 0) {
+            ctx.shadowBlur = 0;
             ctx.fillStyle = "black";
             ctx.fillRect(snake[i].x + 5, snake[i].y + 5, 4, 4);
             ctx.fillRect(snake[i].x + 11, snake[i].y + 5, 4, 4);
         }
     }
+    ctx.shadowBlur = 0; // ريست
 
     // 5. شاشة البداية
     if (direction == '') {
         ctx.fillStyle = "white";
         ctx.font = "bold 20px Cairo";
         ctx.textAlign = "center";
-        ctx.fillText("جاهز؟ اضغط للانطلاق 🚀", canvasSize/2, canvasSize/2 + 50);
+        ctx.fillText("✨ جاهز؟ انطلق!", canvasSize/2, canvasSize/2 + 50);
         return;
     }
 
-    // 6. الحركة والمنطق
+    // 6. الحركة
     let snakeX = snake[0].x;
     let snakeY = snake[0].y;
 
@@ -182,9 +197,21 @@ function draw() {
 
     if (snakeX == food.x && snakeY == food.y) {
         eatSound.currentTime = 0; eatSound.play();
-        createExplosion(food.x, food.y); // تشغيل الانفجار هنا 💥
+        
+        // لون الانفجار نفس لون الحية الحالي
+        let hue = (score * 10) % 360;
+        createExplosion(food.x, food.y, `hsl(${hue}, 100%, 50%)`);
+        
         score++;
         scoreEl.textContent = score;
+        
+        // 🔥 زيادة السرعة تدريجياً
+        if (gameSpeed > 50) { // الحد الأقصى للسرعة
+            gameSpeed -= 2; // نسرع اللعبة 2 ملي ثانية لكل تفاحة
+            clearInterval(gameLoop);
+            gameLoop = setInterval(draw, gameSpeed);
+        }
+
         food = generateFood();
     } else {
         snake.pop();
