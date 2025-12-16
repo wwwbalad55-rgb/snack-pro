@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Snake Xenzia: Neon Edition 💎</title>
+    <title>Snake Xenzia: 3D Edition 🌌</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -11,8 +11,8 @@
     <div class="main-wrapper">
         
         <div id="mainMenu" class="screen">
-            <h1 class="game-title">🐍 Snake Neon</h1>
-            <p class="subtitle">التصميم الأصلي الفخم</p>
+            <h1 class="game-title">🐍 Snake 3D</h1>
+            <p class="subtitle">الإصدار المطور</p>
             <button class="menu-btn start-btn-main" onclick="showMapSelection()">▶️ ابدأ اللعب</button>
             <button class="menu-btn shop-btn" onclick="showShop()">🛒 المتجر</button>
         </div>
@@ -29,12 +29,15 @@
                 <button class="opt-btn selected" onclick="selectMap(1, this)">🌌 فضاء</button>
                 <button class="opt-btn" onclick="selectMap(2, this)">🧱 جدار</button>
                 <button class="opt-btn" onclick="selectMap(3, this)">⚔️ متاهة</button>
+                <button class="opt-btn" onclick="selectMap(4, this)">🏜️ صحراء</button>
+                <button class="opt-btn" onclick="selectMap(5, this)">❄️ جليد</button>
             </div>
 
             <h2 class="section-title">🔥 السرعة</h2>
             <div class="options-grid">
-                <button class="opt-btn selected" onclick="selectDiff('easy', this)">😌 رايق</button>
-                <button class="opt-btn" onclick="selectDiff('hard', this)">😈 حريقة</button>
+                <button class="opt-btn selected" onclick="selectDiff('slow', this)">🐢 بطيئة</button>
+                <button class="opt-btn" onclick="selectDiff('medium', this)">🐇 متوسطة</button>
+                <button class="opt-btn" onclick="selectDiff('fast', this)">🐆 سريعة</button>
             </div>
 
             <button class="menu-btn start-btn" onclick="startGame()">🚀 انطلق</button>

@@ -24,10 +24,10 @@ let currentFoodIcon = "🍎";
 let lastRenderTime = 0;
 let gameSpeed = 10; 
 
-// المتغيرات
+// المتغيرات الجديدة
 let selectedSkin = localStorage.getItem('snakeSkin') || '#2ecc71';
-let selectedMap = 1; 
-let difficulty = 'easy'; 
+let selectedMap = 1; // 1-5
+let difficulty = 'medium'; // slow, medium, fast
 
 // === إدارة القوائم ===
 function showMainMenu() { switchScreen('mainMenu'); }
@@ -56,7 +56,6 @@ function renderShop() {
         const div = document.createElement('div');
         div.className = `skin-item ${selectedSkin === skin.color ? 'selected' : ''}`;
         div.style.backgroundColor = skin.color;
-        // إضافة توهج للأزرار بالمتجر
         div.style.boxShadow = `0 0 10px ${skin.color}`;
         div.onclick = () => {
             selectedSkin = skin.color;
@@ -93,8 +92,11 @@ function initGame() {
     particles = [];
     obstacles = [];
     
-    // السرعة: السهل=7 (رايق وممتع)، الصعب=12
-    gameSpeed = difficulty === 'hard' ? 12 : 7;
+    // 🔥 ضبط السرعات الجديدة 🔥
+    // بطيئة=6, متوسطة=10, سريعة=15
+    if (difficulty === 'slow') gameSpeed = 6;
+    else if (difficulty === 'medium') gameSpeed = 10;
+    else if (difficulty === 'fast') gameSpeed = 15;
     
     buildMap();
     document.getElementById('score').innerText = score;
@@ -106,17 +108,30 @@ function initGame() {
     isRunning = true;
 }
 
+// 🛠️ بناء المودات الـ 5 الجديدة 🛠️
 function buildMap() {
     obstacles = [];
+    // المود 1: فضاء (حر - بورتال) - لا يوجد حواجز
+
+    // المود 2: جدار (وسط)
     if (selectedMap === 2) { 
         for (let i = 4; i < 12; i++) obstacles.push({ x: i * box, y: 8 * box });
-    } else if (selectedMap === 3) { 
+    } 
+    // المود 3: متاهة (زوايا + وسط)
+    else if (selectedMap === 3) { 
         for (let i = 5; i < 11; i++) obstacles.push({ x: i * box, y: 8 * box });
         obstacles.push({x: 1*box, y: 1*box}, {x: 2*box, y: 1*box}, {x: 1*box, y: 2*box}); 
         obstacles.push({x: 14*box, y: 1*box}, {x: 13*box, y: 1*box}, {x: 14*box, y: 2*box}); 
         obstacles.push({x: 1*box, y: 14*box}, {x: 2*box, y: 14*box}, {x: 1*box, y: 13*box}); 
         obstacles.push({x: 14*box, y: 14*box}, {x: 13*box, y: 14*box}, {x: 14*box, y: 13*box}); 
     }
+    // المود 4: صحراء (حواجز أفقية متفرقة)
+    else if (selectedMap === 4) {
+        for(let i=2; i<6; i++) obstacles.push({x: i*box, y: 4*box});
+        for(let i=10; i<14; i++) obstacles.push({x: i*box, y: 12*box});
+        for(let i=6; i<10; i++) obstacles.push({x: i*box, y: 8*box});
+    }
+    // المود 5: جليد (صندوق مغلق - يتم التعامل معه في منطق الحركة)
 }
 
 function resetGame() { initGame(); }
@@ -145,10 +160,16 @@ function update() {
     if (direction == 'RIGHT') snakeX += box;
     if (direction == 'DOWN') snakeY += box;
 
-    if (snakeX < 0) snakeX = canvasSize - box;
-    else if (snakeX >= canvasSize) snakeX = 0;
-    if (snakeY < 0) snakeY = canvasSize - box;
-    else if (snakeY >= canvasSize) snakeY = 0;
+    // 🧊 منطق الحدود للمود 5 (جليد - صندوق مغلق) 🧊
+    if (selectedMap === 5) {
+        if (snakeX < 0 || snakeX >= canvasSize || snakeY < 0 || snakeY >= canvasSize) return gameOver();
+    } else {
+        // باقي المودات: بورتال (حواف مفتوحة)
+        if (snakeX < 0) snakeX = canvasSize - box;
+        else if (snakeX >= canvasSize) snakeX = 0;
+        if (snakeY < 0) snakeY = canvasSize - box;
+        else if (snakeY >= canvasSize) snakeY = 0;
+    }
 
     for (let i = 0; i < snake.length; i++) {
         if (snakeX == snake[i].x && snakeY == snake[i].y) return gameOver();
@@ -171,18 +192,23 @@ function update() {
 }
 
 function draw() {
-    // 1. الخلفية (سوداء مع شفافية بسيطة لتأثير التريل اذا يعجبك، بس هنا نسويها سادة للأداء)
     ctx.fillStyle = "#000";
     ctx.fillRect(0, 0, canvasSize, canvasSize);
 
-    // 2. الحواجز (مع توهج أحمر)
+    // رسم حدود للمود 5 (جليد)
+    if (selectedMap === 5) {
+        ctx.strokeStyle = "#3498db"; ctx.lineWidth = 4; 
+        ctx.shadowBlur = 10; ctx.shadowColor = "#3498db";
+        ctx.strokeRect(0,0,canvasSize,canvasSize);
+        ctx.shadowBlur = 0;
+    }
+
     ctx.shadowBlur = 10;
     ctx.shadowColor = "#e74c3c";
     ctx.fillStyle = "#e74c3c";
     obstacles.forEach(obs => ctx.fillRect(obs.x, obs.y, box - 2, box - 2));
-    ctx.shadowBlur = 0; // ريست
+    ctx.shadowBlur = 0;
 
-    // 3. الانفجارات
     for (let i = particles.length - 1; i >= 0; i--) {
         let p = particles[i];
         p.x += p.vx; p.y += p.vy; p.life -= 0.08;
@@ -190,36 +216,30 @@ function draw() {
         else {
             ctx.globalAlpha = p.life; 
             ctx.fillStyle = p.color;
-            ctx.shadowBlur = 5; ctx.shadowColor = p.color; // توهج للانفجار
+            ctx.shadowBlur = 5; ctx.shadowColor = p.color;
             ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI * 2); ctx.fill();
             ctx.globalAlpha = 1.0; ctx.shadowBlur = 0;
         }
     }
 
-    // 4. الطعام (توهج)
     ctx.shadowBlur = 15;
     ctx.shadowColor = "white";
     ctx.font = "20px Arial"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
     ctx.fillText(currentFoodIcon, food.x + box/2, food.y + box/2 + 2);
     ctx.shadowBlur = 0;
 
-    // 5. الحية (توهج قوي ولون نيون) 🔥 هذا اللي يخليها حلوة
     for (let i = 0; i < snake.length; i++) {
-        // توهج للحية
         ctx.shadowBlur = 15;
         ctx.shadowColor = selectedSkin;
         ctx.fillStyle = i === 0 ? "#fff" : selectedSkin;
-        
         ctx.fillRect(snake[i].x, snake[i].y, box - 2, box - 2);
-        
-        if (i === 0) { // عيون
+        if (i === 0) { 
             ctx.shadowBlur = 0;
             ctx.fillStyle = "black";
             ctx.fillRect(snake[i].x + 5, snake[i].y + 5, 4, 4);
             ctx.fillRect(snake[i].x + 11, snake[i].y + 5, 4, 4);
         }
     }
-    // ريست نهائي
     ctx.shadowBlur = 0;
 }
 

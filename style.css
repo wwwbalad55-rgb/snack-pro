@@ -9,9 +9,9 @@
 }
 
 body {
-    /* خلفية متدرجة فخمة تشبه الألعاب الاحترافية */
-    background: radial-gradient(circle at center, #1a2a6c, #b21f1f, #fdbb2d); 
-    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    /* 🔥 هنا رابط الخلفية 3D - بدله إذا عندك غير صورة 🔥 */
+    background: url('https://images.unsplash.com/photo-1534796636912-3b95b3ab5980?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2072&q=80') no-repeat center center fixed;
+    background-size: cover;
     font-family: 'Cairo', sans-serif;
     height: 100vh;
     display: flex;
@@ -21,7 +21,16 @@ body {
     overflow: hidden;
 }
 
-.main-wrapper { width: 100%; max-width: 420px; text-align: center; }
+/* إضافة طبقة داكنة فوق الخلفية لتقرأ النصوص */
+body::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.6); /* شفافية السواد */
+    z-index: -1;
+}
+
+.main-wrapper { width: 100%; max-width: 450px; text-align: center; position: relative; z-index: 1; }
 
 .screen {
     display: flex; flex-direction: column;
@@ -32,11 +41,11 @@ body {
 
 /* العناوين */
 .game-title { 
-    font-size: 40px; color: #2ecc71; margin-bottom: 5px; 
-    text-shadow: 0 0 15px #2ecc71; /* توهج النص */
+    font-size: 45px; color: #2ecc71; margin-bottom: 5px; 
+    text-shadow: 0 0 20px #2ecc71, 0 0 10px black; 
 }
-.subtitle { color: #ccc; font-size: 14px; margin-bottom: 30px; letter-spacing: 1px; }
-.section-title { font-size: 20px; margin: 15px 0 10px; color: #f1c40f; text-shadow: 0 0 10px #f1c40f; }
+.subtitle { color: #eee; font-size: 16px; margin-bottom: 35px; letter-spacing: 1px; text-shadow: 0 0 5px black; }
+.section-title { font-size: 22px; margin: 15px 0 10px; color: #f1c40f; text-shadow: 0 0 10px #f1c40f, 0 0 5px black; }
 
 /* الأزرار الفخمة */
 .menu-btn {
@@ -50,24 +59,25 @@ body {
 .shop-btn { background: linear-gradient(45deg, #f12711, #f5af19); box-shadow: 0 5px 15px rgba(243, 156, 18, 0.4); }
 .start-btn { background: linear-gradient(45deg, #8E2DE2, #4A00E0); box-shadow: 0 5px 15px rgba(142, 68, 173, 0.4); width: 90%; }
 .retry-btn { background: linear-gradient(45deg, #00b09b, #96c93d); }
-.back-btn { background: #34495e; width: 50%; padding: 10px; }
+.back-btn { background: #34495e; width: 50%; padding: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
 
 .menu-btn:active { transform: scale(0.95); }
 
-/* الشبكات */
+/* الشبكات وتعديل حجم الأزرار الجديد */
 .skins-grid, .options-grid {
-    display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin: 10px 0; width: 100%;
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 10px 0; width: 100%;
 }
 .skin-item, .opt-btn {
     width: 65px; height: 65px; border-radius: 15px;
-    border: 2px solid rgba(255,255,255,0.1); cursor: pointer;
+    border: 2px solid rgba(255,255,255,0.2); cursor: pointer;
     display: flex; justify-content: center; align-items: center;
-    background: rgba(255,255,255,0.05); transition: 0.2s;
+    background: rgba(0,0,0,0.5); transition: 0.2s; backdrop-filter: blur(5px);
 }
-.opt-btn { width: 100px; height: 50px; font-size: 16px; color: white; }
+/* تعديل حجم أزرار الخيارات لتناسب العدد الجديد */
+.opt-btn { width: 80px; height: 45px; font-size: 14px; color: white; font-weight: bold; }
 .selected { 
-    border-color: #f1c40f; background: rgba(241, 196, 15, 0.2); 
-    box-shadow: 0 0 15px rgba(241, 196, 15, 0.5); transform: scale(1.05);
+    border-color: #f1c40f; background: rgba(241, 196, 15, 0.3); 
+    box-shadow: 0 0 15px rgba(241, 196, 15, 0.6); transform: scale(1.05);
 }
 
 /* منطقة اللعب */
@@ -75,10 +85,10 @@ body {
     position: relative; 
     border: 3px solid rgba(255,255,255,0.3); 
     border-radius: 12px;
-    background: rgba(0,0,0,0.8); /* شفافية قليلة */
+    background: rgba(0,0,0,0.85); 
     width: 320px; height: 320px; margin: 0 auto;
-    box-shadow: 0 0 30px rgba(0,0,0,0.5); /* ظل للشاشة */
-    backdrop-filter: blur(5px);
+    box-shadow: 0 0 30px rgba(0,0,0,0.6); 
+    backdrop-filter: blur(10px);
 }
 canvas { width: 100%; height: 100%; display: block; border-radius: 9px; }
 
@@ -92,8 +102,9 @@ canvas { width: 100%; height: 100%; display: block; border-radius: 9px; }
 
 .score-board { display: flex; gap: 15px; justify-content: center; margin-bottom: 15px; }
 .score-box { 
-    background: rgba(255,255,255,0.1); padding: 8px 20px; 
-    border-radius: 20px; font-size: 15px; border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.15); padding: 8px 20px; 
+    border-radius: 20px; font-size: 15px; border: 1px solid rgba(255,255,255,0.2);
+    backdrop-filter: blur(5px);
 }
 .score-box span { color: #f1c40f; font-weight: bold; font-size: 18px; margin-right: 5px; }
 
@@ -102,8 +113,8 @@ canvas { width: 100%; height: 100%; display: block; border-radius: 9px; }
 .row { display: flex; gap: 20px; }
 .btn {
     width: 65px; height: 65px; border-radius: 50%;
-    background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3);
     color: white; font-size: 24px; display: flex; justify-content: center; align-items: center;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.4); backdrop-filter: blur(5px);
 }
 .btn:active { background: rgba(255,255,255,0.3); transform: scale(0.9); }
