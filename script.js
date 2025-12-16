@@ -23,10 +23,10 @@ let particles = [];
 let currentFoodIcon = "🍎";
 const foodIcons = ["🍎", "🍉", "🍇", "🍓", "🍒", "🍑", "🍍", "🍕", "🍔"];
 
-// إعدادات المستخدم (تخزن في المتصفح)
+// إعدادات المستخدم
 let selectedSkin = localStorage.getItem('snakeSkin') || '#2ecc71';
-let selectedMap = 1; // 1: Free, 2: Center, 3: Corners, 4: Box
-let difficulty = 'easy'; // easy, hard
+let selectedMap = 1; 
+let difficulty = 'easy'; 
 
 // === إدارة القوائم ===
 function showMainMenu() {
@@ -66,7 +66,7 @@ function renderShop() {
         div.onclick = () => {
             selectedSkin = skin.color;
             localStorage.setItem('snakeSkin', selectedSkin);
-            renderShop(); // تحديث العرض
+            renderShop(); 
         };
         container.appendChild(div);
     });
@@ -92,7 +92,8 @@ function startGame() {
 }
 
 function initGame() {
-    snake = [{ x: 8 * box, y: 8 * box }];
+    // 🛠️ تعديل مكان البداية: نبدأ من (4,4) بعيداً عن الجدار الوسطي والزوايا
+    snake = [{ x: 4 * box, y: 4 * box }];
     direction = '';
     nextDirection = '';
     score = 0;
@@ -100,7 +101,7 @@ function initGame() {
     obstacles = [];
     
     // إعداد السرعة
-    let speed = difficulty === 'hard' ? 90 : 140; // الصعب أسرع
+    let speed = difficulty === 'hard' ? 90 : 130; 
     
     // بناء الخريطة
     buildMap();
@@ -123,17 +124,16 @@ function buildMap() {
     if (selectedMap === 2) {
         for (let i = 4; i < 12; i++) obstacles.push({ x: i * box, y: 8 * box });
     }
-    // الخريطة 3: الزوايا القاتلة (طلبك) + الوسط
+    // الخريطة 3: الزوايا القاتلة + الوسط
     else if (selectedMap === 3) {
         // الوسط
         for (let i = 5; i < 11; i++) obstacles.push({ x: i * box, y: 8 * box });
-        // الزوايا
-        obstacles.push({x: 2*box, y: 2*box}, {x: 3*box, y: 2*box}, {x: 2*box, y: 3*box}); // فوق يسار
-        obstacles.push({x: 13*box, y: 2*box}, {x: 12*box, y: 2*box}, {x: 13*box, y: 3*box}); // فوق يمين
-        obstacles.push({x: 2*box, y: 13*box}, {x: 3*box, y: 13*box}, {x: 2*box, y: 12*box}); // تحت يسار
-        obstacles.push({x: 13*box, y: 13*box}, {x: 12*box, y: 13*box}, {x: 13*box, y: 12*box}); // تحت يمين
+        // الزوايا (مربعات قاتلة)
+        obstacles.push({x: 1*box, y: 1*box}, {x: 2*box, y: 1*box}, {x: 1*box, y: 2*box}); 
+        obstacles.push({x: 14*box, y: 1*box}, {x: 13*box, y: 1*box}, {x: 14*box, y: 2*box}); 
+        obstacles.push({x: 1*box, y: 14*box}, {x: 2*box, y: 14*box}, {x: 1*box, y: 13*box}); 
+        obstacles.push({x: 14*box, y: 14*box}, {x: 13*box, y: 14*box}, {x: 14*box, y: 13*box}); 
     }
-    // الخريطة 4: الصندوق (الحواف مغلقة - سيتم التعامل معها في المنطق)
 }
 
 function resetGame() {
@@ -147,29 +147,28 @@ function draw() {
     ctx.fillStyle = "#000";
     ctx.fillRect(0, 0, canvasSize, canvasSize);
 
-    // رسم الحواجز
+    // رسم الحواجز (بدون توهج لتقليل اللاك)
     ctx.fillStyle = "#e74c3c";
-    ctx.shadowBlur = 5; ctx.shadowColor = "red";
     obstacles.forEach(obs => {
         ctx.fillRect(obs.x, obs.y, box - 2, box - 2);
     });
-    // رسم حدود للصندوق إذا كانت الخريطة 4
+    
+    // حدود الصندوق (Map 4)
     if (selectedMap === 4) {
-        ctx.strokeStyle = "red";
+        ctx.strokeStyle = "#c0392b";
         ctx.lineWidth = 4;
         ctx.strokeRect(0,0,canvasSize,canvasSize);
     }
-    ctx.shadowBlur = 0;
 
     // رسم الانفجار
     for (let i = particles.length - 1; i >= 0; i--) {
         let p = particles[i];
-        p.x += p.vx; p.y += p.vy; p.life -= 0.05;
+        p.x += p.vx; p.y += p.vy; p.life -= 0.1; // يختفي اسرع
         if (p.life <= 0) particles.splice(i, 1);
         else {
             ctx.globalAlpha = p.life;
             ctx.fillStyle = p.color;
-            ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI * 2); ctx.fill();
             ctx.globalAlpha = 1.0;
         }
     }
@@ -180,25 +179,21 @@ function draw() {
     ctx.textBaseline = "middle";
     ctx.fillText(currentFoodIcon, food.x + box/2, food.y + box/2 + 2);
 
-    // رسم الحية (باللون المختار من المتجر)
+    // رسم الحية (بدون Shadow Blur لزيادة السرعة والسلاسة) 🚀
     for (let i = 0; i < snake.length; i++) {
         ctx.fillStyle = i === 0 ? "#fff" : selectedSkin;
-        ctx.shadowBlur = 10; ctx.shadowColor = selectedSkin;
+        // ⚠️ شلت التوهج هنا حتى لا يعلك الموبايل
         ctx.fillRect(snake[i].x, snake[i].y, box - 2, box - 2);
         
         if (i === 0) { // العيون
             ctx.fillStyle = "black";
-            ctx.shadowBlur = 0;
             ctx.fillRect(snake[i].x + 5, snake[i].y + 5, 4, 4);
             ctx.fillRect(snake[i].x + 11, snake[i].y + 5, 4, 4);
         }
     }
-    ctx.shadowBlur = 0;
 
-    // انتظار البداية
     if (direction == '') return;
 
-    // الحركة
     let snakeX = snake[0].x;
     let snakeY = snake[0].y;
 
@@ -207,23 +202,20 @@ function draw() {
     if (direction == 'RIGHT') snakeX += box;
     if (direction == 'DOWN') snakeY += box;
 
-    // === منطق الحدود (Portal vs Box) ===
+    // منطق الحدود
     if (selectedMap === 4) { 
-        // خريطة الصندوق: الموت عند الحواف
         if (snakeX < 0 || snakeX >= canvasSize || snakeY < 0 || snakeY >= canvasSize) return gameOver();
     } else {
-        // البورتال: الانتقال للجهة المقابلة
         if (snakeX < 0) snakeX = canvasSize - box;
         else if (snakeX >= canvasSize) snakeX = 0;
         if (snakeY < 0) snakeY = canvasSize - box;
         else if (snakeY >= canvasSize) snakeY = 0;
     }
 
-    // الاصطدام بالنفس
+    // الاصطدامات
     for (let i = 0; i < snake.length; i++) {
         if (snakeX == snake[i].x && snakeY == snake[i].y) return gameOver();
     }
-    // الاصطدام بالحواجز
     for (let i = 0; i < obstacles.length; i++) {
         if (snakeX == obstacles[i].x && snakeY == obstacles[i].y) return gameOver();
     }
@@ -244,10 +236,11 @@ function draw() {
 }
 
 function createExplosion(x, y, color) {
-    for (let i = 0; i < 15; i++) { 
+    if (particles.length > 20) particles.shift(); // تقليل عدد الجسيمات لعدم التعليق
+    for (let i = 0; i < 8; i++) { // تقليل عدد الشظايا
         particles.push({
             x: x + box / 2, y: y + box / 2,
-            vx: (Math.random() - 0.5) * 10, vy: (Math.random() - 0.5) * 10,
+            vx: (Math.random() - 0.5) * 8, vy: (Math.random() - 0.5) * 8,
             life: 1.0, color: color 
         });
     }
@@ -282,7 +275,6 @@ function gameOver() {
     document.getElementById('gameOverlay').classList.remove('hidden');
 }
 
-// التحكم
 function handleInput(dir) {
     if (!isGameRunning) return;
     if (dir === 'UP' && direction !== 'DOWN') nextDirection = 'UP';
@@ -303,6 +295,5 @@ document.addEventListener('keydown', (e) => {
     else if (e.keyCode == 40) handleInput('DOWN');
 });
 
-// تهيئة القوائم عند البدء
 showMainMenu();
 document.getElementById('highScore').textContent = highScore;
