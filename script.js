@@ -10,7 +10,7 @@ const actionBtn = document.getElementById('actionBtn');
 const eatSound = new Audio('eat.mp3');
 const deadSound = new Audio('dead.mp3');
 
-// إعدادات القياسات
+// إعدادات اللعبة
 const box = 20;
 const canvasSize = 320; 
 canvas.width = canvasSize;
@@ -26,40 +26,55 @@ let direction = '';
 let nextDirection = '';
 let gameLoop = null;
 let isGameRunning = false;
-let gameSpeed = 130; // السرعة الابتدائية
+let gameSpeed = 130; 
 
-// مصفوفة الانفجار (الجسيمات)
 let particles = [];
+let obstacles = []; // مصفوفة الحواجز
+
+// قائمة الأطعمة (فواكه واكل)
+const foodIcons = ["🍎", "🍉", "🍇", "🍓", "🍒", "🍑", "🍍", "🍕", "🍔"];
+let currentFoodIcon = "🍎"; // الفاكهة الحالية
 
 function initGame() {
     snake = [{ x: 5 * box, y: 5 * box }]; 
     direction = ''; 
     nextDirection = '';
     score = 0;
-    gameSpeed = 130; // تصفير السرعة
-    particles = []; 
+    gameSpeed = 130;
+    particles = [];
+    obstacles = []; // تصفير الحواجز
     scoreEl.textContent = score;
     highScoreEl.textContent = localStorage.getItem('snakeHighScore') || 0;
     
     food = generateFood();
+    currentFoodIcon = foodIcons[Math.floor(Math.random() * foodIcons.length)]; // اختيار فاكهة عشوائية
+    
     isGameRunning = true;
     overlay.classList.add('hidden');
     
-    // تشغيل اللعبة
     if (gameLoop) clearInterval(gameLoop);
     gameLoop = setInterval(draw, gameSpeed);
 }
 
-// دالة صنع الانفجار النيوني
+// دالة صنع الحواجز (المرحلة الثانية)
+function createLevelTwo() {
+    // رسم حواجز على شكل + بالنص أو زوايا
+    // هذا الكود يضيف طابوق بالوسط
+    for (let i = 5; i < 11; i++) {
+        obstacles.push({ x: i * box, y: 5 * box }); // خط افقي
+        obstacles.push({ x: i * box, y: 10 * box }); // خط افقي ثاني
+    }
+}
+
 function createExplosion(x, y, color) {
-    for (let i = 0; i < 20; i++) { 
+    for (let i = 0; i < 15; i++) { 
         particles.push({
             x: x + box / 2,
             y: y + box / 2,
-            vx: (Math.random() - 0.5) * 12,
-            vy: (Math.random() - 0.5) * 12,
+            vx: (Math.random() - 0.5) * 10,
+            vy: (Math.random() - 0.5) * 10,
             life: 1.0, 
-            color: color // نفس لون الحية
+            color: color 
         });
     }
 }
@@ -89,8 +104,11 @@ function generateFood() {
             x: Math.floor(Math.random() * (canvasSize / box)) * box,
             y: Math.floor(Math.random() * (canvasSize / box)) * box
         };
+        // التأكد ان الاكل مو فوق الحية ولا فوق الحواجز
         let onSnake = snake.some(s => s.x === newFood.x && s.y === newFood.y);
-        if (!onSnake) break;
+        let onObstacle = obstacles.some(o => o.x === newFood.x && o.y === newFood.y);
+        
+        if (!onSnake && !onObstacle) break;
     }
     return newFood;
 }
@@ -103,7 +121,6 @@ function handleInput(dir) {
     if (dir === 'RIGHT' && direction !== 'LEFT') nextDirection = 'RIGHT';
 }
 
-// التحكم
 document.getElementById('btnUp').addEventListener('pointerdown', (e) => { e.preventDefault(); handleInput('UP'); });
 document.getElementById('btnDown').addEventListener('pointerdown', (e) => { e.preventDefault(); handleInput('DOWN'); });
 document.getElementById('btnLeft').addEventListener('pointerdown', (e) => { e.preventDefault(); handleInput('LEFT'); });
@@ -119,67 +136,78 @@ document.addEventListener('keydown', (e) => {
 function draw() {
     if (nextDirection) direction = nextDirection;
 
-    // 1. مسح الشاشة
+    // الخلفية
     ctx.fillStyle = "#000";
     ctx.fillRect(0, 0, canvasSize, canvasSize);
 
-    // 2. رسم الانفجار مع توهج ✨
+    // 1. تفعيل المرحلة الثانية عند الوصول لـ 15 نقطة
+    if (score === 15 && obstacles.length === 0) {
+        createLevelTwo();
+        // ومضة تحذيرية
+        ctx.fillStyle = "rgba(255, 0, 0, 0.3)";
+        ctx.fillRect(0, 0, canvasSize, canvasSize);
+    }
+
+    // 2. رسم الحواجز (الطابوق) 🧱
+    ctx.fillStyle = "#7f8c8d"; // لون رصاصي
+    ctx.shadowBlur = 5;
+    ctx.shadowColor = "white";
+    for (let i = 0; i < obstacles.length; i++) {
+        ctx.fillRect(obstacles[i].x, obstacles[i].y, box - 2, box - 2);
+        // رسمة صغيرة داخل الطابوقة
+        ctx.strokeStyle = "#000";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(obstacles[i].x, obstacles[i].y, box - 2, box - 2);
+    }
+    ctx.shadowBlur = 0;
+
+    // 3. رسم الانفجار
     for (let i = particles.length - 1; i >= 0; i--) {
         let p = particles[i];
         p.x += p.vx; p.y += p.vy; p.life -= 0.05;
-
-        if (p.life <= 0) {
-            particles.splice(i, 1);
-        } else {
+        if (p.life <= 0) particles.splice(i, 1);
+        else {
             ctx.globalAlpha = p.life;
-            ctx.shadowBlur = 10; // توهج
-            ctx.shadowColor = p.color;
             ctx.fillStyle = p.color;
             ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, Math.PI * 2); ctx.fill();
             ctx.globalAlpha = 1.0;
-            ctx.shadowBlur = 0; // تصفير التوهج
         }
     }
 
-    // 3. رسم الطعام (متوهج) 🍎✨
-    ctx.shadowBlur = 20;
-    ctx.shadowColor = "red";
-    ctx.fillStyle = "#ff3333";
-    ctx.beginPath(); ctx.arc(food.x + box/2, food.y + box/2, box/2 - 2, 0, Math.PI*2); ctx.fill();
-    ctx.shadowBlur = 0; // نطفي التوهج حتى لا يأثر ع الباقي
+    // 4. رسم الأكل (إيموجي) 🍎
+    ctx.font = "20px Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    // نرسم الإيموجي بوسط المربع بالضبط
+    ctx.fillText(currentFoodIcon, food.x + box/2, food.y + box/2 + 2);
 
-    // 4. رسم الحية (متوهجة وملونة) 🐍✨
+    // 5. رسم الحية
     for (let i = 0; i < snake.length; i++) {
-        // لون متغير حسب النتيجة (قوس قزح تدريجي)
         let hue = (score * 10) % 360; 
         let color = i == 0 ? "#fff" : `hsl(${hue}, 100%, 50%)`;
-        
-        ctx.shadowBlur = 15;
-        ctx.shadowColor = color;
         ctx.fillStyle = color;
-        
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = color;
         ctx.fillRect(snake[i].x, snake[i].y, box - 2, box - 2);
         
-        // العيون
-        if (i == 0) {
+        if (i == 0) { // عيون
             ctx.shadowBlur = 0;
             ctx.fillStyle = "black";
             ctx.fillRect(snake[i].x + 5, snake[i].y + 5, 4, 4);
             ctx.fillRect(snake[i].x + 11, snake[i].y + 5, 4, 4);
         }
     }
-    ctx.shadowBlur = 0; // ريست
+    ctx.shadowBlur = 0;
 
-    // 5. شاشة البداية
     if (direction == '') {
         ctx.fillStyle = "white";
         ctx.font = "bold 20px Cairo";
         ctx.textAlign = "center";
-        ctx.fillText("✨ جاهز؟ انطلق!", canvasSize/2, canvasSize/2 + 50);
+        ctx.fillText("🚀 اضغط للانطلاق", canvasSize/2, canvasSize/2 + 60);
         return;
     }
 
-    // 6. الحركة
+    // الحركة
     let snakeX = snake[0].x;
     let snakeY = snake[0].y;
 
@@ -188,26 +216,34 @@ function draw() {
     if (direction == 'RIGHT') snakeX += box;
     if (direction == 'DOWN') snakeY += box;
 
+    // خسارة 1: الاصطدام بالحائط الخارجي
     if (snakeX < 0 || snakeX >= canvasSize || snakeY < 0 || snakeY >= canvasSize) return gameOver();
+    
+    // خسارة 2: الاصطدام بالنفس
     for (let i = 0; i < snake.length; i++) {
         if (snakeX == snake[i].x && snakeY == snake[i].y) return gameOver();
+    }
+
+    // خسارة 3: الاصطدام بالحواجز الجديدة 🧱
+    for (let i = 0; i < obstacles.length; i++) {
+        if (snakeX == obstacles[i].x && snakeY == obstacles[i].y) return gameOver();
     }
 
     let newHead = { x: snakeX, y: snakeY };
 
     if (snakeX == food.x && snakeY == food.y) {
         eatSound.currentTime = 0; eatSound.play();
-        
-        // لون الانفجار نفس لون الحية الحالي
         let hue = (score * 10) % 360;
         createExplosion(food.x, food.y, `hsl(${hue}, 100%, 50%)`);
         
         score++;
         scoreEl.textContent = score;
-        
-        // 🔥 زيادة السرعة تدريجياً
-        if (gameSpeed > 50) { // الحد الأقصى للسرعة
-            gameSpeed -= 2; // نسرع اللعبة 2 ملي ثانية لكل تفاحة
+
+        // تغيير الفاكهة عشوائياً بعد الأكل
+        currentFoodIcon = foodIcons[Math.floor(Math.random() * foodIcons.length)];
+
+        if (gameSpeed > 60) { 
+            gameSpeed -= 2; 
             clearInterval(gameLoop);
             gameLoop = setInterval(draw, gameSpeed);
         }
