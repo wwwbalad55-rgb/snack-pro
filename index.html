@@ -1,39 +1,38 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Snake Game Pro 🐍</title>
+    <title>Snake Xenzia Pro</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div class="game-wrapper">
+    <div class="main-wrapper">
+        <h1 class="game-title">🐍 لعبة الثعبان</h1>
+
         <div class="score-board">
-            <div class="score-item">Score: <span id="score">0</span></div>
-            <div class="score-item">👑 Best: <span id="highScore">0</span></div>
+            <div class="score-box">النتيجة <br><span id="score">0</span></div>
+            <div class="score-box best">الأفضل <br><span id="highScore">0</span></div>
         </div>
 
-        <div id="game-container">
+        <div class="game-area">
             <canvas id="gameCanvas"></canvas>
             
-            <div id="gameOverlay" class="hidden">
-                <h1 id="overlayTitle">GAME OVER</h1>
-                <p id="finalScoreText" class="hidden">Score: <span id="finalScore">0</span></p>
-                <button id="actionBtn">PLAY AGAIN ▶️</button>
+            <div id="gameOverlay" class="overlay hidden">
+                <h2 id="overlayTitle">GAME OVER</h2>
+                <button id="actionBtn">Play Again 🔄</button>
             </div>
         </div>
 
-        <div class="mobile-controls">
-            <button class="control-btn" id="btnUp">⬆️</button>
-            <div class="horizontal-btns">
-                <button class="control-btn" id="btnLeft">⬅️</button>
-                <button class="control-btn" id="btnDown">⬇️</button>
-                <button class="control-btn" id="btnRight">➡️</button>
+        <div class="controls-area">
+            <button class="btn" id="btnUp">⬆️</button>
+            <div class="row">
+                <button class="btn" id="btnLeft">⬅️</button>
+                <button class="btn" id="btnDown">⬇️</button>
+                <button class="btn" id="btnRight">➡️</button>
             </div>
         </div>
-        
-        <p class="instruction">Use Arrow Keys or Buttons to Play</p>
     </div>
 
     <script src="script.js"></script>

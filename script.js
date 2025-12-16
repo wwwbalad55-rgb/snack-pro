@@ -1,21 +1,20 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-const scoreDisplay = document.getElementById('score');
-const highScoreDisplay = document.getElementById('highScore');
-const finalScoreDisplay = document.getElementById('finalScore');
-const finalScoreText = document.getElementById('finalScoreText');
+const scoreEl = document.getElementById('score');
+const highScoreEl = document.getElementById('highScore');
 const overlay = document.getElementById('gameOverlay');
 const overlayTitle = document.getElementById('overlayTitle');
 const actionBtn = document.getElementById('actionBtn');
 
-// تحميل الأصوات
+// الأصوات
 const eatSound = new Audio('eat.mp3');
 const deadSound = new Audio('dead.mp3');
 
-// إعدادات اللعبة
-const box = 20; // حجم المربع اصغر شوية لجمالية اكثر
-const canvasSize = 400; // حجم ثابت مناسب للموبايل
+// إعدادات اللعبة الثابتة (لضمان عملها ع الموبايل)
+const box = 20;
+// يجب أن يكون الرقم من مضاعفات 20 (320 ÷ 20 = 16 مربع)
+const canvasSize = 320; 
 canvas.width = canvasSize;
 canvas.height = canvasSize;
 
@@ -23,35 +22,31 @@ let snake = [];
 let food = {};
 let score = 0;
 let highScore = localStorage.getItem('snakeHighScore') || 0;
-highScoreDisplay.textContent = highScore;
+highScoreEl.textContent = highScore;
 
 let direction = '';
 let nextDirection = '';
 let gameLoop = null;
 let isGameRunning = false;
-let gameSpeed = 100;
-let particles = []; // للانفجار
+let particles = [];
 
-// تهيئة اللعبة
 function initGame() {
-    snake = [{ x: 10 * box, y: 10 * box }];
+    // نبدأ من الوسط تقريباً
+    snake = [{ x: 5 * box, y: 5 * box }];
     direction = ''; 
     nextDirection = '';
     score = 0;
-    gameSpeed = 100;
-    particles = [];
-    scoreDisplay.textContent = score;
-    highScoreDisplay.textContent = localStorage.getItem('snakeHighScore') || 0;
+    scoreEl.textContent = score;
+    highScoreEl.textContent = localStorage.getItem('snakeHighScore') || 0;
     
     food = generateFood();
     isGameRunning = true;
     overlay.classList.add('hidden');
     
     if (gameLoop) clearInterval(gameLoop);
-    gameLoop = setInterval(draw, gameSpeed);
+    gameLoop = setInterval(draw, 130); // سرعة متوسطة
 }
 
-// إنهاء اللعبة
 function gameOver() {
     deadSound.play();
     clearInterval(gameLoop);
@@ -60,59 +55,32 @@ function gameOver() {
     if (score > highScore) {
         highScore = score;
         localStorage.setItem('snakeHighScore', highScore);
-        overlayTitle.textContent = "New High Score! 🏆";
+        overlayTitle.textContent = "New Record! 👑";
         overlayTitle.style.color = "#f1c40f";
     } else {
         overlayTitle.textContent = "GAME OVER";
         overlayTitle.style.color = "red";
     }
-    
-    highScoreDisplay.textContent = highScore;
-    finalScoreDisplay.textContent = score;
-    finalScoreText.classList.remove('hidden');
-    actionBtn.textContent = "REPLAY 🔄";
+    highScoreEl.textContent = highScore;
     overlay.classList.remove('hidden');
 }
 
 function generateFood() {
     let newFood;
-    let validPosition = false;
-    while (!validPosition) {
+    while (true) {
         newFood = {
             x: Math.floor(Math.random() * (canvasSize / box)) * box,
             y: Math.floor(Math.random() * (canvasSize / box)) * box
         };
-        // التأكد ان الاكل مو فوق الحية
-        validPosition = !snake.some(segment => segment.x === newFood.x && segment.y === newFood.y);
+        // تأكد أن الطعام ليس فوق الثعبان
+        let onSnake = snake.some(s => s.x === newFood.x && s.y === newFood.y);
+        if (!onSnake) break;
     }
     return newFood;
 }
 
-// نظام الانفجار (Fireworks)
-function createExplosion(x, y) {
-    for (let i = 0; i < 10; i++) {
-        particles.push({
-            x: x + box/2, y: y + box/2,
-            vx: (Math.random() - 0.5) * 8,
-            vy: (Math.random() - 0.5) * 8,
-            life: 1.0,
-            color: `hsl(${Math.random() * 360}, 100%, 50%)`
-        });
-    }
-}
-
-// التحكم بالكيبورد
-document.addEventListener('keydown', (event) => {
-    if (!isGameRunning) return;
-    const key = event.keyCode;
-    if (key == 37 && direction != 'RIGHT') nextDirection = 'LEFT';
-    else if (key == 38 && direction != 'DOWN') nextDirection = 'UP';
-    else if (key == 39 && direction != 'LEFT') nextDirection = 'RIGHT';
-    else if (key == 40 && direction != 'UP') nextDirection = 'DOWN';
-});
-
-// === التحكم باللمس (أزرار الموبايل) ===
-function handleMobileInput(dir) {
+// التحكم (أزرار الشاشة + كيبورد)
+function handleInput(dir) {
     if (!isGameRunning) return;
     if (dir === 'UP' && direction !== 'DOWN') nextDirection = 'UP';
     if (dir === 'DOWN' && direction !== 'UP') nextDirection = 'DOWN';
@@ -120,23 +88,20 @@ function handleMobileInput(dir) {
     if (dir === 'RIGHT' && direction !== 'LEFT') nextDirection = 'RIGHT';
 }
 
-// ربط الأزرار مع منع السكرول والزووم
-['btnUp', 'btnDown', 'btnLeft', 'btnRight'].forEach(id => {
-    const btn = document.getElementById(id);
-    
-    // لمس (Touch)
-    btn.addEventListener('touchstart', (e) => {
-        e.preventDefault(); // يمنع مشاكل الموبايل
-        handleMobileInput(id.replace('btn', '').toUpperCase());
-    }, { passive: false });
-    
-    // ماوس (Click) للحاسبة
-    btn.addEventListener('mousedown', (e) => {
-        handleMobileInput(id.replace('btn', '').toUpperCase());
-    });
+// ربط أزرار الشاشة
+document.getElementById('btnUp').onpointerdown = (e) => { e.preventDefault(); handleInput('UP'); };
+document.getElementById('btnDown').onpointerdown = (e) => { e.preventDefault(); handleInput('DOWN'); };
+document.getElementById('btnLeft').onpointerdown = (e) => { e.preventDefault(); handleInput('LEFT'); };
+document.getElementById('btnRight').onpointerdown = (e) => { e.preventDefault(); handleInput('RIGHT'); };
+
+// ربط الكيبورد
+document.addEventListener('keydown', (e) => {
+    if (e.keyCode == 37) handleInput('LEFT');
+    else if (e.keyCode == 38) handleInput('UP');
+    else if (e.keyCode == 39) handleInput('RIGHT');
+    else if (e.keyCode == 40) handleInput('DOWN');
 });
 
-// الرسم
 function draw() {
     if (nextDirection) direction = nextDirection;
 
@@ -144,36 +109,17 @@ function draw() {
     ctx.fillStyle = "#000";
     ctx.fillRect(0, 0, canvasSize, canvasSize);
 
-    // رسم الانفجار
-    for (let i = particles.length - 1; i >= 0; i--) {
-        let p = particles[i];
-        p.x += p.vx; p.y += p.vy; p.life -= 0.05;
-        if (p.life <= 0) particles.splice(i, 1);
-        else {
-            ctx.globalAlpha = p.life;
-            ctx.fillStyle = p.color;
-            ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI*2); ctx.fill();
-            ctx.globalAlpha = 1.0;
-        }
-    }
-
     // رسم الطعام
-    ctx.shadowBlur = 15; ctx.shadowColor = "red";
     ctx.fillStyle = "red";
     ctx.beginPath(); ctx.arc(food.x + box/2, food.y + box/2, box/2 - 2, 0, Math.PI*2); ctx.fill();
-    ctx.shadowBlur = 0;
 
-    // رسم الحية
+    // رسم الثعبان
     for (let i = 0; i < snake.length; i++) {
         ctx.fillStyle = (i == 0) ? "#00ff00" : "#00cc00";
-        if (i == 0) { // رأس الحية
-             ctx.beginPath(); ctx.arc(snake[i].x + box/2, snake[i].y + box/2, box/2, 0, Math.PI*2); ctx.fill();
-        } else { // جسم الحية
-            ctx.fillRect(snake[i].x + 1, snake[i].y + 1, box - 2, box - 2);
-        }
+        ctx.fillRect(snake[i].x, snake[i].y, box - 1, box - 1);
     }
 
-    if (direction == '') return; // اللعبة واقفة تنتظر حركة
+    if (!direction) return;
 
     let snakeX = snake[0].x;
     let snakeY = snake[0].y;
@@ -183,7 +129,6 @@ function draw() {
     if (direction == 'RIGHT') snakeX += box;
     if (direction == 'DOWN') snakeY += box;
 
-    // حدود الخسارة
     if (snakeX < 0 || snakeX >= canvasSize || snakeY < 0 || snakeY >= canvasSize) return gameOver();
     for (let i = 0; i < snake.length; i++) {
         if (snakeX == snake[i].x && snakeY == snake[i].y) return gameOver();
@@ -191,12 +136,10 @@ function draw() {
 
     let newHead = { x: snakeX, y: snakeY };
 
-    // الأكل
     if (snakeX == food.x && snakeY == food.y) {
         eatSound.currentTime = 0; eatSound.play();
-        createExplosion(food.x, food.y);
         score++;
-        scoreDisplay.textContent = score;
+        scoreEl.textContent = score;
         food = generateFood();
     } else {
         snake.pop();
@@ -208,6 +151,6 @@ actionBtn.addEventListener('click', initGame);
 
 // رسالة البداية
 ctx.fillStyle = "white";
-ctx.font = "20px Arial";
+ctx.font = "16px Arial";
 ctx.textAlign = "center";
-ctx.fillText("Press Arrow / Button to Start", canvasSize/2, canvasSize/2);
+ctx.fillText("اضغط أي زر للبدء", canvasSize/2, canvasSize/2);
