@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake Game Pro 🐍</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="main-wrapper">
+        <div class="header">
+            <h1>لعبة الثعبان 🐍</h1>
+            
+            <div class="score-board">
+    <div class="score-item">النتيجة: <span id="score">0</span></div>
+    <div class="score-item">👑 الرقم القياسي: <span id="highScore">0</span></div>
+</div>
+            
+        </div>
+        
+        <div id="game-container">
+            <canvas id="gameCanvas" width="400" height="400"></canvas>
+            
+            <div id="gameOverlay" class="overlay">
+                <h2 id="overlayTitle">اضغط للبدء</h2>
+                <p id="finalScoreText" class="hidden">النتيجة النهائية: <span id="finalScore">0</span></p> 
+                <button id="actionBtn" class="btn">ابدأ اللعب ▶️</button>
+            </div>
+            <div class="mobile-controls">
+    <button class="control-btn" id="btnUp">⬆️</button>
+    <div class="horizontal-btns">
+        <button class="control-btn" id="btnLeft">⬅️</button>
+        <button class="control-btn" id="btnDown">⬇️</button>
+        <button class="control-btn" id="btnRight">➡️</button>
+    </div>
+</div>
+        </div>
+
+        <p class="instruction">استخدم الأسهم للتحكم ⬆️⬇️⬅️➡️</p>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
