@@ -26,28 +26,32 @@ let direction = '';
 let nextDirection = '';
 let gameLoop = null;
 let isGameRunning = false;
-let gameSpeed = 130; 
+let gameSpeed = 180; // السرعة صارت أبطأ (كل ما زاد الرقم قلت السرعة)
 
 let particles = [];
 let obstacles = []; // مصفوفة الحواجز
 
-// قائمة الأطعمة (فواكه واكل)
+// قائمة الأطعمة
 const foodIcons = ["🍎", "🍉", "🍇", "🍓", "🍒", "🍑", "🍍", "🍕", "🍔"];
-let currentFoodIcon = "🍎"; // الفاكهة الحالية
+let currentFoodIcon = "🍎";
 
 function initGame() {
     snake = [{ x: 5 * box, y: 5 * box }]; 
     direction = ''; 
     nextDirection = '';
     score = 0;
-    gameSpeed = 130;
+    // السرعة ثابتة وبطيئة شوية
+    gameSpeed = 180; 
+    
     particles = [];
-    obstacles = []; // تصفير الحواجز
+    obstacles = []; 
+    createCenterWall(); // إنشاء الجدار الوسطي
+    
     scoreEl.textContent = score;
     highScoreEl.textContent = localStorage.getItem('snakeHighScore') || 0;
     
     food = generateFood();
-    currentFoodIcon = foodIcons[Math.floor(Math.random() * foodIcons.length)]; // اختيار فاكهة عشوائية
+    currentFoodIcon = foodIcons[Math.floor(Math.random() * foodIcons.length)];
     
     isGameRunning = true;
     overlay.classList.add('hidden');
@@ -56,13 +60,12 @@ function initGame() {
     gameLoop = setInterval(draw, gameSpeed);
 }
 
-// دالة صنع الحواجز (المرحلة الثانية)
-function createLevelTwo() {
-    // رسم حواجز على شكل + بالنص أو زوايا
-    // هذا الكود يضيف طابوق بالوسط
-    for (let i = 5; i < 11; i++) {
-        obstacles.push({ x: i * box, y: 5 * box }); // خط افقي
-        obstacles.push({ x: i * box, y: 10 * box }); // خط افقي ثاني
+// دالة صنع الجدار الوسطي
+function createCenterWall() {
+    // نرسم جدار افقي بالنص (الكانفس 16 مربع، النص هو 8)
+    // الجدار يبدأ من المربع 4 وينتهي بـ 11
+    for (let i = 4; i < 12; i++) {
+        obstacles.push({ x: i * box, y: 8 * box }); 
     }
 }
 
@@ -140,28 +143,20 @@ function draw() {
     ctx.fillStyle = "#000";
     ctx.fillRect(0, 0, canvasSize, canvasSize);
 
-    // 1. تفعيل المرحلة الثانية عند الوصول لـ 15 نقطة
-    if (score === 15 && obstacles.length === 0) {
-        createLevelTwo();
-        // ومضة تحذيرية
-        ctx.fillStyle = "rgba(255, 0, 0, 0.3)";
-        ctx.fillRect(0, 0, canvasSize, canvasSize);
-    }
-
-    // 2. رسم الحواجز (الطابوق) 🧱
-    ctx.fillStyle = "#7f8c8d"; // لون رصاصي
+    // 1. رسم الجدار الوسطي 🧱
+    ctx.fillStyle = "#e74c3c"; // لون أحمر طابوقي
     ctx.shadowBlur = 5;
-    ctx.shadowColor = "white";
+    ctx.shadowColor = "red";
     for (let i = 0; i < obstacles.length; i++) {
         ctx.fillRect(obstacles[i].x, obstacles[i].y, box - 2, box - 2);
-        // رسمة صغيرة داخل الطابوقة
-        ctx.strokeStyle = "#000";
+        // حدود للطابوقة
+        ctx.strokeStyle = "#c0392b";
         ctx.lineWidth = 2;
         ctx.strokeRect(obstacles[i].x, obstacles[i].y, box - 2, box - 2);
     }
     ctx.shadowBlur = 0;
 
-    // 3. رسم الانفجار
+    // 2. رسم الانفجار
     for (let i = particles.length - 1; i >= 0; i--) {
         let p = particles[i];
         p.x += p.vx; p.y += p.vy; p.life -= 0.05;
@@ -174,14 +169,13 @@ function draw() {
         }
     }
 
-    // 4. رسم الأكل (إيموجي) 🍎
+    // 3. رسم الأكل (إيموجي) 🍎
     ctx.font = "20px Arial";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    // نرسم الإيموجي بوسط المربع بالضبط
     ctx.fillText(currentFoodIcon, food.x + box/2, food.y + box/2 + 2);
 
-    // 5. رسم الحية
+    // 4. رسم الحية
     for (let i = 0; i < snake.length; i++) {
         let hue = (score * 10) % 360; 
         let color = i == 0 ? "#fff" : `hsl(${hue}, 100%, 50%)`;
@@ -216,15 +210,19 @@ function draw() {
     if (direction == 'RIGHT') snakeX += box;
     if (direction == 'DOWN') snakeY += box;
 
-    // خسارة 1: الاصطدام بالحائط الخارجي
-    if (snakeX < 0 || snakeX >= canvasSize || snakeY < 0 || snakeY >= canvasSize) return gameOver();
+    // 🔥 ميزة البورتال (العبور من الجدران) 🔥
+    if (snakeX < 0) snakeX = canvasSize - box; // طلع يسار يرجع يمين
+    else if (snakeX >= canvasSize) snakeX = 0; // طلع يمين يرجع يسار
     
-    // خسارة 2: الاصطدام بالنفس
+    if (snakeY < 0) snakeY = canvasSize - box; // طلع فوك يرجع جوة
+    else if (snakeY >= canvasSize) snakeY = 0; // طلع جوة يرجع فوك
+
+    // خسارة 1: الاصطدام بالنفس
     for (let i = 0; i < snake.length; i++) {
         if (snakeX == snake[i].x && snakeY == snake[i].y) return gameOver();
     }
 
-    // خسارة 3: الاصطدام بالحواجز الجديدة 🧱
+    // خسارة 2: الاصطدام بالجدار الوسطي 🧱
     for (let i = 0; i < obstacles.length; i++) {
         if (snakeX == obstacles[i].x && snakeY == obstacles[i].y) return gameOver();
     }
@@ -239,14 +237,8 @@ function draw() {
         score++;
         scoreEl.textContent = score;
 
-        // تغيير الفاكهة عشوائياً بعد الأكل
+        // تغيير الفاكهة
         currentFoodIcon = foodIcons[Math.floor(Math.random() * foodIcons.length)];
-
-        if (gameSpeed > 60) { 
-            gameSpeed -= 2; 
-            clearInterval(gameLoop);
-            gameLoop = setInterval(draw, gameSpeed);
-        }
 
         food = generateFood();
     } else {
