@@ -3,318 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Snake Fast & Smooth ⚡</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@700&display=swap');
-
-        * {
-            box-sizing: border-box;
-            margin: 0; padding: 0;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-            touch-action: manipulation; /* سر السلاسة للموبايل */
-        }
-
-        body {
-            background: #1a1a1a;
-            font-family: 'Cairo', sans-serif;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            overflow: hidden;
-        }
-
-        .game-header { margin-bottom: 10px; text-align: center; }
-        .score-board { 
-            display: flex; gap: 20px; font-size: 18px; 
-            background: #333; padding: 8px 20px; border-radius: 20px;
-        }
-        span { color: #f1c40f; font-weight: bold; }
-
-        .game-area {
-            position: relative;
-            width: 320px; height: 320px;
-            background: #000;
-            border: 4px solid #444;
-            border-radius: 8px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.5);
-        }
-
-        canvas { display: block; width: 100%; height: 100%; }
-
-        .overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85);
-            display: flex; flex-direction: column;
-            justify-content: center; align-items: center;
-            z-index: 10;
-        }
-        .hidden { display: none !important; }
-
-        button {
-            font-family: 'Cairo', sans-serif;
-            border: none; outline: none; cursor: pointer;
-        }
-
-        .menu-btn {
-            background: #27ae60; color: white;
-            padding: 10px 30px; font-size: 20px;
-            border-radius: 50px; margin: 10px;
-            box-shadow: 0 4px #1e8449;
-        }
-        .menu-btn:active { transform: translateY(3px); box-shadow: none; }
-
-        .controls {
-            margin-top: 20px; display: flex; flex-direction: column; align-items: center; gap: 10px;
-        }
-        .row { display: flex; gap: 20px; }
-        .c-btn {
-            width: 65px; height: 65px;
-            background: rgba(255,255,255,0.1);
-            border: 2px solid rgba(255,255,255,0.2);
-            border-radius: 50%;
-            color: white; font-size: 24px;
-            display: flex; justify-content: center; align-items: center;
-        }
-        .c-btn:active { background: rgba(255,255,255,0.3); }
-
-    </style>
+    <title>Snake Pro Speed ⚡</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div class="game-header">
-        <div class="score-board">
-            <div>النتيجة: <span id="score">0</span></div>
-            <div>الأفضل: <span id="highScore">0</span></div>
+    <div class="main-wrapper">
+        <div class="game-header">
+            <div class="score-board">
+                <div class="score-box">النتيجة <span id="score">0</span></div>
+                <div class="score-box">الأفضل <span id="highScore">0</span></div>
+            </div>
+        </div>
+
+        <div class="game-container">
+            <canvas id="gameCanvas"></canvas>
+            
+            <div id="mainMenu" class="overlay">
+                <h1 class="title">🐍 الثعبان السريع</h1>
+                <p class="subtitle">نسخة الأداء العالي</p>
+                <button class="btn-menu" onclick="startGame('easy')">😌 سهل (سلس)</button>
+                <button class="btn-menu btn-hard" onclick="startGame('hard')">😈 صعب (نار)</button>
+            </div>
+
+            <div id="gameOverScreen" class="overlay hidden">
+                <h2 class="title" style="color:#e74c3c">خسرت! 💀</h2>
+                <button class="btn-menu" onclick="showMainMenu()">🏠 القائمة</button>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="c-btn" id="btnUp">⬆️</button>
+            <div class="row">
+                <button class="c-btn" id="btnLeft">⬅️</button>
+                <button class="c-btn" id="btnDown">⬇️</button>
+                <button class="c-btn" id="btnRight">➡️</button>
+            </div>
         </div>
     </div>
 
-    <div class="game-area">
-        <canvas id="gameCanvas"></canvas>
-        
-        <div id="mainMenu" class="overlay">
-            <h1>🐍 لعبة الثعبان</h1>
-            <p style="color:#aaa; font-size:14px; margin-bottom:10px">النسخة السريعة</p>
-            <button class="menu-btn" onclick="startGame('easy')">😌 سهل</button>
-            <button class="menu-btn" style="background:#c0392b; box-shadow:0 4px #922b21" onclick="startGame('hard')">😈 صعب</button>
-        </div>
-
-        <div id="gameOverScreen" class="overlay hidden">
-            <h2 style="color:red; font-size:30px">خسرت! 💀</h2>
-            <button class="menu-btn" onclick="showMenu()">🏠 القائمة</button>
-        </div>
-    </div>
-
-    <div class="controls">
-        <button class="c-btn" id="btnUp">⬆️</button>
-        <div class="row">
-            <button class="c-btn" id="btnLeft">⬅️</button>
-            <button class="c-btn" id="btnDown">⬇️</button>
-            <button class="c-btn" id="btnRight">➡️</button>
-        </div>
-    </div>
-
-    <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        
-        // إعدادات الصوت (روابط مباشرة صوت خفيف)
-        const eatSound = new Audio('eat.mp3'); 
-        const deadSound = new Audio('dead.mp3');
-
-        // القياسات
-        const box = 20; 
-        const canvasSize = 320;
-        canvas.width = canvasSize;
-        canvas.height = canvasSize;
-
-        let snake = [];
-        let food = {};
-        let score = 0;
-        let highScore = localStorage.getItem('snakeHighScore') || 0;
-        let direction = '';
-        let nextDirection = '';
-        let gameLoop;
-        let isRunning = false;
-        let gameSpeed = 100;
-
-        // الجدران (الخريطة: وسط + زوايا)
-        let obstacles = [];
-
-        document.getElementById('highScore').innerText = highScore;
-
-        function showMenu() {
-            document.getElementById('gameOverScreen').classList.add('hidden');
-            document.getElementById('mainMenu').classList.remove('hidden');
-        }
-
-        function startGame(difficulty) {
-            document.getElementById('mainMenu').classList.add('hidden');
-            document.getElementById('gameOverScreen').classList.add('hidden');
-            
-            // 🛠️ البداية الصحيحة: الزاوية (بعيد عن الجدار)
-            snake = [{x: 4 * box, y: 4 * box}];
-            direction = '';
-            nextDirection = '';
-            score = 0;
-            document.getElementById('score').innerText = score;
-
-            // بناء الجدران
-            buildMap();
-            
-            // إنشاء الطعام
-            food = generateFood();
-            
-            // السرعة (بالميلي ثانية - كل ما قل الرقم زادت السرعة)
-            // سهل: 130ms (سلس) | صعب: 90ms (سريع)
-            gameSpeed = (difficulty === 'easy') ? 130 : 90;
-
-            isRunning = true;
-            if(gameLoop) clearInterval(gameLoop);
-            gameLoop = setInterval(draw, gameSpeed);
-        }
-
-        function buildMap() {
-            obstacles = [];
-            // الجدار الوسطي
-            for(let i=5; i<11; i++) obstacles.push({x: i*box, y: 8*box});
-            
-            // الزوايا (اختياري - لزيادة التحدي)
-            // فوق يسار
-            obstacles.push({x: 1*box, y: 1*box}, {x: 2*box, y: 1*box}, {x: 1*box, y: 2*box});
-            // فوق يمين
-            obstacles.push({x: 14*box, y: 1*box}, {x: 13*box, y: 1*box}, {x: 14*box, y: 2*box});
-            // تحت يسار
-            obstacles.push({x: 1*box, y: 14*box}, {x: 2*box, y: 14*box}, {x: 1*box, y: 13*box});
-            // تحت يمين
-            obstacles.push({x: 14*box, y: 14*box}, {x: 13*box, y: 14*box}, {x: 14*box, y: 13*box});
-        }
-
-        function draw() {
-            if (nextDirection) direction = nextDirection;
-
-            // مسح الشاشة
-            ctx.fillStyle = "#111"; // خلفية رمادي غامق لتقليل وهج الشاشة
-            ctx.fillRect(0, 0, canvasSize, canvasSize);
-
-            // رسم الجدران
-            ctx.fillStyle = "#c0392b";
-            for(let obs of obstacles) {
-                ctx.fillRect(obs.x, obs.y, box-1, box-1);
-            }
-
-            // رسم الطعام
-            ctx.font = "20px Arial";
-            ctx.textAlign = "center"; ctx.textBaseline = "middle";
-            ctx.fillText("🍎", food.x + box/2, food.y + box/2 + 2);
-
-            // رسم الحية
-            for(let i=0; i<snake.length; i++){
-                // الرأس أبيض، الجسم أخضر
-                ctx.fillStyle = (i===0) ? "#fff" : "#2ecc71";
-                ctx.fillRect(snake[i].x, snake[i].y, box-1, box-1);
-            }
-
-            if(direction == "") return; // انتظار البداية
-
-            // الحركة
-            let snakeX = snake[0].x;
-            let snakeY = snake[0].y;
-
-            if(direction == "LEFT") snakeX -= box;
-            if(direction == "UP") snakeY -= box;
-            if(direction == "RIGHT") snakeX += box;
-            if(direction == "DOWN") snakeY += box;
-
-            // بورتال (الحدود المفتوحة)
-            if(snakeX < 0) snakeX = canvasSize - box;
-            else if(snakeX >= canvasSize) snakeX = 0;
-            if(snakeY < 0) snakeY = canvasSize - box;
-            else if(snakeY >= canvasSize) snakeY = 0;
-
-            // الاصطدام بالنفس أو الجدران
-            if(collision(snakeX, snakeY)) {
-                gameOver();
-                return;
-            }
-
-            // الأكل
-            if(snakeX == food.x && snakeY == food.y){
-                score++;
-                document.getElementById('score').innerText = score;
-                eatSound.currentTime = 0; eatSound.play().catch(()=>{}); // تجاهل خطأ الصوت اذا ما اشتغل
-                food = generateFood();
-            } else {
-                snake.pop();
-            }
-
-            let newHead = {x: snakeX, y: snakeY};
-            snake.unshift(newHead);
-        }
-
-        function collision(x, y) {
-            // الاصطدام بالجسم
-            for(let i=0; i<snake.length; i++){
-                if(x == snake[i].x && y == snake[i].y) return true;
-            }
-            // الاصطدام بالجدران
-            for(let obs of obstacles){
-                if(x == obs.x && y == obs.y) return true;
-            }
-            return false;
-        }
-
-        function generateFood() {
-            let newFood;
-            while(true) {
-                newFood = {
-                    x: Math.floor(Math.random() * (canvasSize/box)) * box,
-                    y: Math.floor(Math.random() * (canvasSize/box)) * box
-                };
-                // التأكد ان الاكل مو فوق الحية ولا الجدار
-                if(!collision(newFood.x, newFood.y)) break;
-            }
-            return newFood;
-        }
-
-        function gameOver() {
-            isRunning = false;
-            clearInterval(gameLoop);
-            deadSound.play().catch(()=>{});
-            if(score > highScore) {
-                highScore = score;
-                localStorage.setItem('snakeHighScore', highScore);
-            }
-            document.getElementById('highScore').innerText = highScore;
-            document.getElementById('gameOverScreen').classList.remove('hidden');
-        }
-
-        // تحكم (لمس سريع)
-        function handleInput(dir) {
-            if(!isRunning) return;
-            if(dir == "LEFT" && direction != "RIGHT") nextDirection = "LEFT";
-            if(dir == "UP" && direction != "DOWN") nextDirection = "UP";
-            if(dir == "RIGHT" && direction != "LEFT") nextDirection = "RIGHT";
-            if(dir == "DOWN" && direction != "UP") nextDirection = "DOWN";
-        }
-
-        // ربط الازرار
-        document.getElementById('btnUp').onpointerdown = (e) => { e.preventDefault(); handleInput('UP'); };
-        document.getElementById('btnDown').onpointerdown = (e) => { e.preventDefault(); handleInput('DOWN'); };
-        document.getElementById('btnLeft').onpointerdown = (e) => { e.preventDefault(); handleInput('LEFT'); };
-        document.getElementById('btnRight').onpointerdown = (e) => { e.preventDefault(); handleInput('RIGHT'); };
-
-        // كيبورد
-        document.addEventListener('keydown', (e) => {
-            if(e.keyCode == 37) handleInput('LEFT');
-            if(e.keyCode == 38) handleInput('UP');
-            if(e.keyCode == 39) handleInput('RIGHT');
-            if(e.keyCode == 40) handleInput('DOWN');
-        });
-
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
