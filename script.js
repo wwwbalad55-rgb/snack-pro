@@ -20,16 +20,16 @@ let particles = [];
 let foodIcons = ["🍎", "🍉", "🍇", "🍓", "🍒", "🍑", "🍍", "🍕", "🍔"];
 let currentFoodIcon = "🍎";
 
-// === إعدادات الأداء (المحرك) ===
+// === إعدادات الأداء ===
 let lastRenderTime = 0;
 let gameSpeed = 10; 
 
-// === إعدادات المستخدم ===
+// === المتغيرات ===
 let selectedSkin = localStorage.getItem('snakeSkin') || '#2ecc71';
 let selectedMap = 1; 
 let difficulty = 'easy'; 
 
-// === إدارة الشاشات ===
+// === إدارة القوائم ===
 function showMainMenu() { switchScreen('mainMenu'); }
 function showShop() { switchScreen('shopScreen'); renderShop(); }
 function showMapSelection() { switchScreen('mapScreen'); }
@@ -46,7 +46,7 @@ const skins = [
     { color: '#f1c40f', name: 'ذهبي' },
     { color: '#e74c3c', name: 'أحمر' },
     { color: '#9b59b6', name: 'بنفسجي' },
-    { color: '#ffffff', name: 'أبيض' }
+    { color: '#ecf0f1', name: 'أبيض' }
 ];
 
 function renderShop() {
@@ -85,7 +85,7 @@ function startGame() {
 }
 
 function initGame() {
-    // مكان البداية الآمن (الزاوية)
+    // نقطة البداية (الزاوية 4,4)
     snake = [{ x: 4 * box, y: 4 * box }];
     direction = '';
     nextDirection = '';
@@ -93,8 +93,8 @@ function initGame() {
     particles = [];
     obstacles = [];
     
-    // السرعة: السهل=8، الصعب=13 (أرقام موزونة للسلاسة)
-    gameSpeed = difficulty === 'hard' ? 13 : 8;
+    // السرعة: السهل=8، الصعب=14 (سريع جداً)
+    gameSpeed = difficulty === 'hard' ? 14 : 8;
     
     buildMap();
     document.getElementById('score').innerText = score;
@@ -145,13 +145,13 @@ function update() {
     if (direction == 'RIGHT') snakeX += box;
     if (direction == 'DOWN') snakeY += box;
 
-    // البورتال
+    // بورتال (حواف مفتوحة)
     if (snakeX < 0) snakeX = canvasSize - box;
     else if (snakeX >= canvasSize) snakeX = 0;
     if (snakeY < 0) snakeY = canvasSize - box;
     else if (snakeY >= canvasSize) snakeY = 0;
 
-    // الاصطدامات
+    // خسارة
     for (let i = 0; i < snake.length; i++) {
         if (snakeX == snake[i].x && snakeY == snake[i].y) return gameOver();
     }
@@ -159,7 +159,7 @@ function update() {
         if (snakeX == obs.x && snakeY == obs.y) return gameOver();
     }
 
-    // الأكل
+    // أكل
     if (snakeX == food.x && snakeY == food.y) {
         eatSound.currentTime = 0; eatSound.play().catch(()=>{});
         createExplosion(food.x, food.y, selectedSkin);
@@ -181,7 +181,7 @@ function draw() {
     ctx.fillStyle = "#e74c3c";
     obstacles.forEach(obs => ctx.fillRect(obs.x, obs.y, box - 2, box - 2));
 
-    // الانفجارات (خفيفة وبدون ظل)
+    // الانفجارات (خفيفة وبدون لاك)
     for (let i = particles.length - 1; i >= 0; i--) {
         let p = particles[i];
         p.x += p.vx; p.y += p.vy; p.life -= 0.1;
@@ -197,12 +197,12 @@ function draw() {
     ctx.font = "20px Arial"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
     ctx.fillText(currentFoodIcon, food.x + box/2, food.y + box/2 + 2);
 
-    // الحية (بدون توهج = سرعة عالية)
+    // الحية
     for (let i = 0; i < snake.length; i++) {
         ctx.fillStyle = i === 0 ? "#fff" : selectedSkin;
         ctx.fillRect(snake[i].x, snake[i].y, box - 2, box - 2);
         
-        if (i === 0) { // عيون
+        if (i === 0) { // العيون
             ctx.fillStyle = "black";
             ctx.fillRect(snake[i].x + 5, snake[i].y + 5, 4, 4);
             ctx.fillRect(snake[i].x + 11, snake[i].y + 5, 4, 4);
@@ -211,8 +211,8 @@ function draw() {
 }
 
 function createExplosion(x, y, color) {
-    if (particles.length > 10) particles.shift(); // تقليل العدد
-    for (let i = 0; i < 6; i++) {
+    if (particles.length > 8) particles.shift(); // عدد قليل للانفجار لعدم التعليق
+    for (let i = 0; i < 5; i++) {
         particles.push({
             x: x + box/2, y: y + box/2,
             vx: (Math.random()-0.5)*8, vy: (Math.random()-0.5)*8,
@@ -264,5 +264,7 @@ document.addEventListener('keydown', (e) => {
     if(e.keyCode == 39) handleInput('RIGHT');
     if(e.keyCode == 40) handleInput('DOWN');
 });
+
+// تشغيل القائمة عند البدء
 showMainMenu();
 document.getElementById('highScore').innerText = highScore;
