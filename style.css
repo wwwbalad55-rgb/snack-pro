@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@700;900&display=swap');
 
 * {
     box-sizing: border-box;
@@ -9,7 +9,9 @@
 }
 
 body {
-    background: #1e1e1e; /* لون غامق سريع */
+    /* خلفية متدرجة فخمة تشبه الألعاب الاحترافية */
+    background: radial-gradient(circle at center, #1a2a6c, #b21f1f, #fdbb2d); 
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
     font-family: 'Cairo', sans-serif;
     height: 100vh;
     display: flex;
@@ -19,68 +21,89 @@ body {
     overflow: hidden;
 }
 
-.main-wrapper { width: 100%; max-width: 400px; text-align: center; }
+.main-wrapper { width: 100%; max-width: 420px; text-align: center; }
 
-/* إدارة الشاشات */
 .screen {
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
-    width: 100%; transition: opacity 0.2s;
+    width: 100%; transition: opacity 0.3s ease;
 }
 .hidden { display: none !important; }
 
-/* النصوص */
-.game-title { font-size: 32px; color: #2ecc71; margin-bottom: 5px; }
-.subtitle { color: #888; font-size: 14px; margin-bottom: 20px; }
-.title { font-size: 20px; margin: 10px 0; color: #f1c40f; }
-
-/* الأزرار */
-.menu-btn {
-    width: 80%; padding: 12px; margin: 8px 0;
-    font-size: 18px; font-family: inherit; border: none;
-    border-radius: 50px; background: #27ae60; color: white;
-    cursor: pointer; box-shadow: 0 4px #1e8449;
+/* العناوين */
+.game-title { 
+    font-size: 40px; color: #2ecc71; margin-bottom: 5px; 
+    text-shadow: 0 0 15px #2ecc71; /* توهج النص */
 }
-.menu-btn:active { transform: translateY(2px); box-shadow: none; }
-.shop-btn { background: #e67e22; box-shadow: 0 4px #d35400; }
-.back-btn { background: #7f8c8d; width: 50%; box-shadow: 0 4px #566566; }
-.start-btn { background: #8e44ad; width: 90%; box-shadow: 0 4px #6c3483; }
+.subtitle { color: #ccc; font-size: 14px; margin-bottom: 30px; letter-spacing: 1px; }
+.section-title { font-size: 20px; margin: 15px 0 10px; color: #f1c40f; text-shadow: 0 0 10px #f1c40f; }
+
+/* الأزرار الفخمة */
+.menu-btn {
+    width: 85%; padding: 15px; margin: 10px 0;
+    font-size: 18px; font-weight: bold; font-family: inherit; border: none;
+    border-radius: 50px; color: white; cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.1s;
+    text-transform: uppercase;
+}
+.start-btn-main { background: linear-gradient(45deg, #11998e, #38ef7d); box-shadow: 0 5px 15px rgba(46, 204, 113, 0.4); }
+.shop-btn { background: linear-gradient(45deg, #f12711, #f5af19); box-shadow: 0 5px 15px rgba(243, 156, 18, 0.4); }
+.start-btn { background: linear-gradient(45deg, #8E2DE2, #4A00E0); box-shadow: 0 5px 15px rgba(142, 68, 173, 0.4); width: 90%; }
+.retry-btn { background: linear-gradient(45deg, #00b09b, #96c93d); }
+.back-btn { background: #34495e; width: 50%; padding: 10px; }
+
+.menu-btn:active { transform: scale(0.95); }
 
 /* الشبكات */
 .skins-grid, .options-grid {
-    display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 10px 0; width: 100%;
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin: 10px 0; width: 100%;
 }
 .skin-item, .opt-btn {
-    width: 60px; height: 60px; border-radius: 12px;
-    border: 3px solid rgba(255,255,255,0.1); cursor: pointer;
+    width: 65px; height: 65px; border-radius: 15px;
+    border: 2px solid rgba(255,255,255,0.1); cursor: pointer;
     display: flex; justify-content: center; align-items: center;
+    background: rgba(255,255,255,0.05); transition: 0.2s;
 }
-.opt-btn { width: 90px; height: 45px; font-size: 16px; background: #333; color: white; }
-.selected { border-color: #f1c40f; background: #444; box-shadow: 0 0 10px #f1c40f; }
+.opt-btn { width: 100px; height: 50px; font-size: 16px; color: white; }
+.selected { 
+    border-color: #f1c40f; background: rgba(241, 196, 15, 0.2); 
+    box-shadow: 0 0 15px rgba(241, 196, 15, 0.5); transform: scale(1.05);
+}
 
-/* ساحة اللعب */
+/* منطقة اللعب */
 .game-area {
-    position: relative; border: 3px solid #555; border-radius: 8px;
-    background: #000; width: 320px; height: 320px; margin: 0 auto;
+    position: relative; 
+    border: 3px solid rgba(255,255,255,0.3); 
+    border-radius: 12px;
+    background: rgba(0,0,0,0.8); /* شفافية قليلة */
+    width: 320px; height: 320px; margin: 0 auto;
+    box-shadow: 0 0 30px rgba(0,0,0,0.5); /* ظل للشاشة */
+    backdrop-filter: blur(5px);
 }
-canvas { width: 100%; height: 100%; display: block; }
+canvas { width: 100%; height: 100%; display: block; border-radius: 9px; }
 
 .overlay {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0,0,0,0.9); display: flex;
     flex-direction: column; justify-content: center; align-items: center; z-index: 10;
+    border-radius: 9px;
 }
+.game-over-text { font-size: 36px; color: #ff3333; text-shadow: 0 0 20px red; margin-bottom: 20px; }
 
-.score-board { display: flex; gap: 20px; justify-content: center; margin-bottom: 10px; }
-.score-box { background: #333; padding: 5px 15px; border-radius: 15px; font-size: 15px; }
-.score-box span { color: #f1c40f; font-weight: bold; }
+.score-board { display: flex; gap: 15px; justify-content: center; margin-bottom: 15px; }
+.score-box { 
+    background: rgba(255,255,255,0.1); padding: 8px 20px; 
+    border-radius: 20px; font-size: 15px; border: 1px solid rgba(255,255,255,0.1);
+}
+.score-box span { color: #f1c40f; font-weight: bold; font-size: 18px; margin-right: 5px; }
 
 /* أزرار التحكم */
-.controls-area { margin-top: 15px; display: flex; flex-direction: column; align-items: center; gap: 5px; }
-.row { display: flex; gap: 15px; }
+.controls-area { margin-top: 20px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.row { display: flex; gap: 20px; }
 .btn {
     width: 65px; height: 65px; border-radius: 50%;
     background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.2);
     color: white; font-size: 24px; display: flex; justify-content: center; align-items: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 }
-.btn:active { background: rgba(255,255,255,0.3); }
+.btn:active { background: rgba(255,255,255,0.3); transform: scale(0.9); }
